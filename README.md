@@ -3,16 +3,63 @@
 ## 📋 Tổng quan Dự án
 
 **Tên dự án:** BIM Management System  
+**Phiên bản:** v2.0 - Phase 2a Complete  
 **Mục tiêu:** Hệ thống quản lý toàn diện cho các dự án BIM (Building Information Modeling) trong lĩnh vực xây dựng, hạ tầng và giao thông  
 **Công ty:** OneCad Vietnam - https://onecadvn.com
 
 ## 🌐 URLs
 
 - **Development (Sandbox):** https://3000-il1ec2okaahgchy9k3855-cbeee0f9.sandbox.novita.ai
-- **API Endpoint:** https://3000-il1ec2okaahgchy9k3855-cbeee0f9.sandbox.novita.ai/api
-- **Source Code:** /home/user/webapp
+- **GitHub Repository:** https://github.com/MrNvNguyen/Web-App
+- **Source Code Backup:** https://www.genspark.ai/api/files/s/siC71ntG
 
 ## ✨ Tính năng Chính
+
+### ⭐ **Phase 2a - MỚI CẬP NHẬT!**
+
+#### 1. **Form Modal đầy đủ cho tất cả module** 🎉
+- ✅ **Modal Thêm Dự án**: Form nhập đầy đủ thông tin dự án
+  - Tên, mã dự án, chủ đầu tư, địa điểm
+  - Ngày bắt đầu/kết thúc
+  - Giá trị hợp đồng, chi phí dự toán
+  - Chọn người quản lý từ danh sách nhân sự
+  - Trạng thái dự án
+
+- ✅ **Modal Thêm Nhân sự**: Quản lý thông tin nhân sự
+  - Họ tên, email, số điện thoại
+  - Chức vụ (BIM Manager, Coordinator, Modeler...)
+  - Lương theo giờ
+  - Trạng thái active/inactive
+
+- ✅ **Modal Thêm Nhiệm vụ**: Tạo task chi tiết
+  - Chọn dự án, hạng mục, bộ môn
+  - Giao nhiệm vụ cho nhân sự
+  - Số giờ ước tính
+  - Ưu tiên (Low, Medium, High, Urgent)
+  - Trạng thái (Todo, In Progress, Review, Completed)
+  - Hạn hoàn thành
+
+- ✅ **Modal Thêm Timesheet**: Ghi nhận giờ làm
+  - Chọn nhân sự, dự án, nhiệm vụ
+  - Ngày làm việc
+  - Số giờ làm việc (tự động cập nhật vào task)
+  - Mô tả công việc đã làm
+
+- ✅ **Modal Thêm Thu Chi**: Quản lý tài chính
+  - Chọn dự án
+  - Loại chi phí (hoặc tạo mới)
+  - Thu/Chi
+  - Số tiền, ngày giao dịch
+  - Số chứng từ, mô tả
+
+#### 2. **Tạo loại chi phí tùy biến** ⭐ **TÍNH NĂNG ĐẶC BIỆT**
+- ✅ Trong form "Thêm Thu Chi", có nút **"➕ Thêm mới"** bên cạnh "Loại chi phí"
+- ✅ Modal tạo loại chi phí mới với:
+  - Tên loại chi phí
+  - Danh mục (Labor, Material, Travel, Overhead, Other, Income)
+  - Mô tả
+- ✅ Tự động cập nhật dropdown sau khi thêm
+- ✅ Linh hoạt cho từng dự án, từng giai đoạn
 
 ### 1. Dashboard Tổng quan
 - Thống kê tổng số dự án, nhân sự, nhiệm vụ
@@ -180,9 +227,13 @@ Sử dụng các nút "Thêm..." trên mỗi module để thêm:
 
 ## 📝 Tính năng Chưa triển khai
 
-### Phase 2 (Đề xuất phát triển tiếp)
-- [ ] Form thêm/sửa dự án, nhân sú, nhiệm vụ (UI Modal)
+### ~~Phase 2a (Đã hoàn thành ✅)~~
+- ✅ Form thêm/sửa dự án, nhân sú, nhiệm vụ (UI Modal)
+- ✅ Tạo loại chi phí tùy biến
+
+### Phase 2b (Tiếp theo)
 - [ ] Chi tiết dự án với tabs: Thông tin, Hạng mục, Nhiệm vụ, Thu chi
+- [ ] Edit/Delete cho các module
 - [ ] Báo cáo tuần/tháng tự động
 - [ ] Export Excel cho các báo cáo
 - [ ] Quản lý file đính kèm (sử dụng Cloudflare R2)
@@ -202,10 +253,34 @@ Sử dụng các nút "Thêm..." trên mỗi module để thêm:
 
 ## 🔄 Deployment Status
 
-- **Platform:** Development Sandbox
-- **Status:** ✅ Active
-- **Database:** Local D1 (for development)
-- **Last Updated:** 2026-02-10
+- **Platform:** Development Sandbox + Production Ready
+- **Status:** ✅ Phase 2a Complete
+- **Database:** Cloudflare D1 (local + ready for production)
+- **GitHub:** Ready to push to https://github.com/MrNvNguyen/Web-App
+- **Cloudflare:** Ready to deploy to Cloudflare Pages
+- **Last Updated:** 2026-02-10 - Phase 2a Complete
+
+### 🚀 Deployment Guide
+
+Xem file [DEPLOYMENT.md](DEPLOYMENT.md) để biết chi tiết cách:
+1. Push code lên GitHub
+2. Deploy lên Cloudflare Pages production
+3. Setup D1 database trên production
+4. Troubleshooting các vấn đề thường gặp
+
+### 📦 Quick Commands
+
+```bash
+# Push to GitHub (after setup authorization)
+./push-to-github.sh
+
+# Deploy to Cloudflare Pages
+npm run deploy
+
+# Or manual steps
+npm run build
+npx wrangler pages deploy dist --project-name webapp
+```
 
 ## 📚 Commands Reference
 
