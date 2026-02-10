@@ -194,6 +194,18 @@ app.put('/api/projects/:id', async (c) => {
   }
 })
 
+app.delete('/api/projects/:id', async (c) => {
+  const db = c.env.DB
+  const id = c.req.param('id')
+  
+  try {
+    await db.prepare('DELETE FROM projects WHERE id = ?').bind(id).run()
+    return c.json({ success: true })
+  } catch (error) {
+    return c.json({ error: 'Failed to delete project' }, 500)
+  }
+})
+
 // Categories API
 app.get('/api/categories', async (c) => {
   const db = c.env.DB
@@ -581,6 +593,41 @@ app.post('/api/expense-types', async (c) => {
   }
 })
 
+app.put('/api/expense-types/:id', async (c) => {
+  const db = c.env.DB
+  const id = c.req.param('id')
+  const body = await c.req.json()
+  
+  try {
+    await db.prepare(`
+      UPDATE expense_types SET
+        name = ?, category = ?, description = ?
+      WHERE id = ?
+    `).bind(
+      body.name,
+      body.category,
+      body.description,
+      id
+    ).run()
+    
+    return c.json({ success: true })
+  } catch (error) {
+    return c.json({ error: 'Failed to update expense type' }, 500)
+  }
+})
+
+app.delete('/api/expense-types/:id', async (c) => {
+  const db = c.env.DB
+  const id = c.req.param('id')
+  
+  try {
+    await db.prepare('DELETE FROM expense_types WHERE id = ?').bind(id).run()
+    return c.json({ success: true })
+  } catch (error) {
+    return c.json({ error: 'Failed to delete expense type' }, 500)
+  }
+})
+
 // ==================== FRONTEND ====================
 
 app.get('/', (c) => {
@@ -619,6 +666,78 @@ app.get('/', (c) => {
             font-weight: 600;
           }
           .table-container { max-height: 600px; overflow-y: auto; }
+          
+          /* Modal Styles */
+          .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.5);
+          }
+          .modal.active {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+          }
+          .modal-content {
+            background-color: white;
+            padding: 0;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 600px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+          }
+          .modal-header {
+            padding: 20px 24px;
+            border-bottom: 1px solid #e5e7eb;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+          }
+          .modal-body {
+            padding: 24px;
+          }
+          .modal-footer {
+            padding: 16px 24px;
+            border-top: 1px solid #e5e7eb;
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+          }
+          
+          /* Tab Styles */
+          .tabs {
+            display: flex;
+            border-bottom: 2px solid #e5e7eb;
+            margin-bottom: 20px;
+          }
+          .tab {
+            padding: 12px 24px;
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s;
+            font-weight: 500;
+          }
+          .tab:hover {
+            background-color: #f3f4f6;
+          }
+          .tab.active {
+            color: #0066CC;
+            border-bottom-color: #0066CC;
+          }
+          .tab-content {
+            display: none;
+          }
+          .tab-content.active {
+            display: block;
+          }
         </style>
     </head>
     <body class="bg-gray-50">
@@ -665,6 +784,10 @@ app.get('/', (c) => {
                         <a href="#" onclick="showView('finances')" class="flex items-center px-4 py-3 text-gray-700 hover:bg-blue-50 hover:text-primary rounded-lg transition">
                             <i class="fas fa-dollar-sign w-6"></i>
                             <span class="ml-3">Quản lý Thu Chi</span>
+                        </a>
+                        <a href="#" onclick="showView('expense-types')" class="flex items-center px-4 py-3 text-gray-700 hover:bg-blue-50 hover:text-primary rounded-lg transition">
+                            <i class="fas fa-tags w-6"></i>
+                            <span class="ml-3">Loại Chi phí</span>
                         </a>
                     </nav>
                 </div>
@@ -875,254 +998,42 @@ app.get('/', (c) => {
                         </div>
                     </div>
                 </div>
+
+                <!-- Expense Types View -->
+                <div id="view-expense-types" class="view-content hidden">
+                    <div class="flex justify-between items-center mb-6">
+                        <h2 class="text-2xl font-bold text-gray-800">Quản lý Loại Chi phí</h2>
+                        <button onclick="showExpenseTypeForm()" class="bg-primary text-white px-4 py-2 rounded-lg hover:bg-secondary transition">
+                            <i class="fas fa-plus mr-2"></i>Thêm Loại Chi phí
+                        </button>
+                    </div>
+                    
+                    <div class="bg-white rounded-lg shadow overflow-hidden">
+                        <div class="table-container">
+                            <table class="min-w-full divide-y divide-gray-200">
+                                <thead class="bg-gray-50 sticky top-0">
+                                    <tr>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Tên loại chi phí</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Danh mục</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Mô tả</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Thao tác</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="expense-types-table" class="bg-white divide-y divide-gray-200">
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
             </main>
         </div>
 
+        <!-- Modals will be dynamically inserted here -->
+        <div id="modals-container"></div>
+
         <script src="https://cdn.jsdelivr.net/npm/axios@1.6.0/dist/axios.min.js"></script>
-        <script>
-          // View Management
-          function showView(viewName) {
-            document.querySelectorAll('.view-content').forEach(el => el.classList.add('hidden'))
-            document.getElementById('view-' + viewName).classList.remove('hidden')
-            
-            // Load data based on view
-            switch(viewName) {
-              case 'dashboard': loadDashboard(); break;
-              case 'projects': loadProjects(); break;
-              case 'staff': loadStaff(); break;
-              case 'tasks': loadTasks(); break;
-              case 'timesheets': loadTimesheets(); break;
-              case 'finances': loadFinances(); break;
-            }
-          }
-
-          // Status Badge Helper
-          function getStatusBadge(status, type) {
-            const statusConfig = {
-              project: {
-                planning: 'bg-yellow-100 text-yellow-800',
-                design_basic: 'bg-blue-100 text-blue-800',
-                design_technical: 'bg-purple-100 text-purple-800',
-                construction: 'bg-orange-100 text-orange-800',
-                completed: 'bg-green-100 text-green-800'
-              },
-              task: {
-                todo: 'bg-gray-100 text-gray-800',
-                in_progress: 'bg-blue-100 text-blue-800',
-                review: 'bg-yellow-100 text-yellow-800',
-                completed: 'bg-green-100 text-green-800'
-              },
-              priority: {
-                low: 'bg-gray-100 text-gray-800',
-                medium: 'bg-blue-100 text-blue-800',
-                high: 'bg-orange-100 text-orange-800',
-                urgent: 'bg-red-100 text-red-800'
-              }
-            }
-            
-            const config = statusConfig[type] || {}
-            const colorClass = config[status] || 'bg-gray-100 text-gray-800'
-            return \`<span class="status-badge \${colorClass}">\${status}</span>\`
-          }
-
-          // Format Currency
-          function formatCurrency(amount) {
-            return new Intl.NumberFormat('vi-VN').format(amount) + ' VNĐ'
-          }
-
-          // Load Dashboard
-          async function loadDashboard() {
-            try {
-              const { data } = await axios.get('/api/dashboard/stats')
-              
-              // Update stats cards
-              const totalProjects = data.projects.reduce((sum, p) => sum + p.count, 0)
-              document.getElementById('total-projects').textContent = totalProjects
-              document.getElementById('total-staff').textContent = data.staff.count || 0
-              
-              const activeTasks = data.tasks.find(t => t.status === 'in_progress')
-              document.getElementById('active-tasks').textContent = activeTasks ? activeTasks.count : 0
-              
-              const income = data.finances.find(f => f.transaction_type === 'income')?.total || 0
-              const expense = data.finances.find(f => f.transaction_type === 'expense')?.total || 0
-              const profit = (income - expense) / 1000000000
-              document.getElementById('profit').textContent = profit.toFixed(2)
-              
-              // Project Status Chart
-              const projectLabels = data.projects.map(p => p.status)
-              const projectCounts = data.projects.map(p => p.count)
-              
-              new Chart(document.getElementById('projectStatusChart'), {
-                type: 'doughnut',
-                data: {
-                  labels: projectLabels,
-                  datasets: [{
-                    data: projectCounts,
-                    backgroundColor: ['#FCD34D', '#60A5FA', '#A78BFA', '#FB923C', '#34D399']
-                  }]
-                },
-                options: { responsive: true, maintainAspectRatio: true }
-              })
-              
-              // Task Status Chart
-              const taskLabels = data.tasks.map(t => t.status)
-              const taskCounts = data.tasks.map(t => t.count)
-              
-              new Chart(document.getElementById('taskStatusChart'), {
-                type: 'bar',
-                data: {
-                  labels: taskLabels,
-                  datasets: [{
-                    label: 'Số lượng',
-                    data: taskCounts,
-                    backgroundColor: '#0066CC'
-                  }]
-                },
-                options: { responsive: true, maintainAspectRatio: true }
-              })
-            } catch (error) {
-              console.error('Error loading dashboard:', error)
-            }
-          }
-
-          // Load Projects
-          async function loadProjects() {
-            try {
-              const { data } = await axios.get('/api/projects')
-              const tbody = document.getElementById('projects-table')
-              tbody.innerHTML = data.map(p => \`
-                <tr class="hover:bg-gray-50">
-                  <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">\${p.code}</td>
-                  <td class="px-6 py-4 text-sm text-gray-900">\${p.name}</td>
-                  <td class="px-6 py-4 text-sm text-gray-700">\${p.client}</td>
-                  <td class="px-6 py-4 whitespace-nowrap text-sm">\${getStatusBadge(p.status, 'project')}</td>
-                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">\${formatCurrency(p.contract_value)}</td>
-                  <td class="px-6 py-4 whitespace-nowrap text-sm">
-                    <button onclick="viewProjectDetail(\${p.id})" class="text-primary hover:text-secondary">
-                      <i class="fas fa-eye"></i>
-                    </button>
-                  </td>
-                </tr>
-              \`).join('')
-            } catch (error) {
-              console.error('Error loading projects:', error)
-            }
-          }
-
-          // Load Staff
-          async function loadStaff() {
-            try {
-              const { data } = await axios.get('/api/staff')
-              const tbody = document.getElementById('staff-table')
-              tbody.innerHTML = data.map(s => \`
-                <tr class="hover:bg-gray-50">
-                  <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">\${s.name}</td>
-                  <td class="px-6 py-4 text-sm text-gray-700">\${s.email}</td>
-                  <td class="px-6 py-4 text-sm text-gray-700">\${s.position}</td>
-                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">\${formatCurrency(s.hourly_rate)}</td>
-                  <td class="px-6 py-4 whitespace-nowrap text-sm">\${getStatusBadge(s.status, 'project')}</td>
-                  <td class="px-6 py-4 whitespace-nowrap text-sm">
-                    <button onclick="viewStaffDetail(\${s.id})" class="text-primary hover:text-secondary">
-                      <i class="fas fa-eye"></i>
-                    </button>
-                  </td>
-                </tr>
-              \`).join('')
-            } catch (error) {
-              console.error('Error loading staff:', error)
-            }
-          }
-
-          // Load Tasks
-          async function loadTasks() {
-            try {
-              const { data } = await axios.get('/api/tasks')
-              const tbody = document.getElementById('tasks-table')
-              tbody.innerHTML = data.map(t => \`
-                <tr class="hover:bg-gray-50">
-                  <td class="px-6 py-4 text-sm font-medium text-gray-900">\${t.title}</td>
-                  <td class="px-6 py-4 text-sm text-gray-700">\${t.project_name}</td>
-                  <td class="px-6 py-4 text-sm text-gray-700">\${t.assigned_name || '-'}</td>
-                  <td class="px-6 py-4 whitespace-nowrap text-sm">\${getStatusBadge(t.priority, 'priority')}</td>
-                  <td class="px-6 py-4 whitespace-nowrap text-sm">\${getStatusBadge(t.status, 'task')}</td>
-                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">\${t.due_date || '-'}</td>
-                  <td class="px-6 py-4 whitespace-nowrap text-sm">
-                    <button class="text-primary hover:text-secondary">
-                      <i class="fas fa-edit"></i>
-                    </button>
-                  </td>
-                </tr>
-              \`).join('')
-            } catch (error) {
-              console.error('Error loading tasks:', error)
-            }
-          }
-
-          // Load Timesheets
-          async function loadTimesheets() {
-            try {
-              const { data } = await axios.get('/api/timesheets')
-              const tbody = document.getElementById('timesheets-table')
-              tbody.innerHTML = data.map(t => \`
-                <tr class="hover:bg-gray-50">
-                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">\${t.work_date}</td>
-                  <td class="px-6 py-4 text-sm text-gray-700">\${t.staff_name}</td>
-                  <td class="px-6 py-4 text-sm text-gray-700">\${t.project_name}</td>
-                  <td class="px-6 py-4 text-sm text-gray-700">\${t.task_title}</td>
-                  <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">\${t.hours}h</td>
-                  <td class="px-6 py-4 whitespace-nowrap text-sm">\${getStatusBadge(t.status, 'task')}</td>
-                  <td class="px-6 py-4 whitespace-nowrap text-sm">
-                    <button class="text-green-600 hover:text-green-800">
-                      <i class="fas fa-check"></i>
-                    </button>
-                  </td>
-                </tr>
-              \`).join('')
-            } catch (error) {
-              console.error('Error loading timesheets:', error)
-            }
-          }
-
-          // Load Finances
-          async function loadFinances() {
-            try {
-              const { data } = await axios.get('/api/finances')
-              const tbody = document.getElementById('finances-table')
-              tbody.innerHTML = data.map(f => \`
-                <tr class="hover:bg-gray-50">
-                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">\${f.transaction_date}</td>
-                  <td class="px-6 py-4 text-sm text-gray-700">\${f.project_name}</td>
-                  <td class="px-6 py-4 text-sm text-gray-700">\${f.expense_type_name}</td>
-                  <td class="px-6 py-4 whitespace-nowrap text-sm">
-                    <span class="status-badge \${f.transaction_type === 'income' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}">
-                      \${f.transaction_type === 'income' ? 'Thu' : 'Chi'}
-                    </span>
-                  </td>
-                  <td class="px-6 py-4 whitespace-nowrap text-sm font-medium \${f.transaction_type === 'income' ? 'text-green-600' : 'text-red-600'}">
-                    \${formatCurrency(f.amount)}
-                  </td>
-                  <td class="px-6 py-4 text-sm text-gray-700">\${f.description || '-'}</td>
-                </tr>
-              \`).join('')
-            } catch (error) {
-              console.error('Error loading finances:', error)
-            }
-          }
-
-          // Placeholder functions for forms
-          function showProjectForm() { alert('Chức năng thêm dự án sẽ được phát triển') }
-          function showStaffForm() { alert('Chức năng thêm nhân sự sẽ được phát triển') }
-          function showTaskForm() { alert('Chức năng thêm nhiệm vụ sẽ được phát triển') }
-          function showTimesheetForm() { alert('Chức năng thêm timesheet sẽ được phát triển') }
-          function showFinanceForm() { alert('Chức năng thêm thu chi sẽ được phát triển') }
-          function viewProjectDetail(id) { alert('Chi tiết dự án #' + id) }
-          function viewStaffDetail(id) { alert('Chi tiết nhân sự #' + id) }
-
-          // Initialize
-          window.onload = () => {
-            showView('dashboard')
-          }
-        </script>
+        <script src="/static/modals.js"></script>
+        <script src="/static/app.js"></script>
     </body>
     </html>
   `)
