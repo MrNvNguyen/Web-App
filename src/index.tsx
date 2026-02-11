@@ -45,11 +45,42 @@ app.get('/api/dashboard/stats', async (c) => {
       GROUP BY transaction_type
     `).all()
     
+    // Nhiệm vụ quá hạn (overdue tasks)
+    const overdueTasks = await db.prepare(`
+      SELECT COUNT(*) as count
+      FROM tasks
+      WHERE status != 'completed' 
+      AND due_date IS NOT NULL 
+      AND DATE(due_date) < DATE('now')
+    `).first()
+    
+    // Top 5 nhân sự hiệu suất cao
+    const staffPerformance = await db.prepare(`
+      SELECT 
+        s.id,
+        s.name,
+        s.position,
+        COUNT(DISTINCT t.id) as total_tasks,
+        SUM(CASE WHEN t.status = 'completed' THEN 1 ELSE 0 END) as completed_tasks,
+        COALESCE(SUM(ts.hours), 0) as total_hours,
+        ROUND(CAST(SUM(CASE WHEN t.status = 'completed' THEN 1 ELSE 0 END) AS FLOAT) * 100.0 / NULLIF(COUNT(t.id), 0), 1) as completion_rate
+      FROM staff s
+      LEFT JOIN tasks t ON s.id = t.assigned_to
+      LEFT JOIN timesheets ts ON s.id = ts.staff_id
+      WHERE s.status = 'active'
+      GROUP BY s.id, s.name, s.position
+      HAVING COUNT(t.id) > 0
+      ORDER BY completion_rate DESC, completed_tasks DESC
+      LIMIT 5
+    `).all()
+    
     return c.json({
       projects: projectStats.results,
       staff: staffCount,
       tasks: taskStats.results,
-      finances: financeStats.results
+      finances: financeStats.results,
+      overdueTasks: overdueTasks,
+      staffPerformance: staffPerformance.results
     })
   } catch (error) {
     return c.json({ error: 'Failed to fetch dashboard stats' }, 500)
