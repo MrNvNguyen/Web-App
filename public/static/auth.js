@@ -1,18 +1,5 @@
-// Simple authentication system with test accounts
-// NOTE: This is a demo authentication for testing only
-// Production should use real authentication like JWT, OAuth, etc.
-
-const TEST_ACCOUNTS = [
-  { username: 'admin', password: 'admin123', name: 'Admin', role: 'Admin', email: 'admin@onecad.vn' },
-  { username: 'manager', password: 'manager123', name: 'Nguyễn Văn An', role: 'BIM Manager', email: 'an.nguyen@onecad.vn' },
-  { username: 'coordinator', password: 'coord123', name: 'Trần Thị Bình', role: 'BIM Coordinator', email: 'binh.tran@onecad.vn' },
-  { username: 'modeler', password: 'model123', name: 'Lê Văn Cường', role: 'BIM Modeler', email: 'cuong.le@onecad.vn' }
-];
-
-// Initialize accounts in localStorage if not exists
-if (!localStorage.getItem('bim_accounts')) {
-  localStorage.setItem('bim_accounts', JSON.stringify(TEST_ACCOUNTS));
-}
+// Database Authentication System
+// Uses /api/auth/login for authentication
 
 // Check if user is logged in
 function isLoggedIn() {
@@ -25,20 +12,26 @@ function getCurrentUser() {
   return userJson ? JSON.parse(userJson) : null;
 }
 
-// Login function
-function login(username, password) {
-  // Get accounts from localStorage (which may have updated passwords)
-  const accounts = JSON.parse(localStorage.getItem('bim_accounts') || JSON.stringify(TEST_ACCOUNTS));
-  const user = accounts.find(u => u.username === username && u.password === password);
-  
-  if (user) {
-    // Store user info (without password)
-    const { password: _, ...userInfo } = user;
-    localStorage.setItem('bim_user', JSON.stringify(userInfo));
-    return true;
+// Login function - Uses database authentication
+async function login(username, password) {
+  try {
+    const response = await axios.post('/api/auth/login', {
+      username: username,
+      password: password
+    });
+    
+    if (response.data && response.data.id) {
+      // Store user info in localStorage
+      localStorage.setItem('bim_user', JSON.stringify(response.data));
+      return { success: true, user: response.data };
+    }
+    
+    return { success: false, error: 'Invalid response from server' };
+  } catch (error) {
+    console.error('Login error:', error);
+    const errorMessage = error.response?.data?.error || 'Đăng nhập thất bại. Vui lòng thử lại.';
+    return { success: false, error: errorMessage };
   }
-  
-  return false;
 }
 
 // Logout function
@@ -73,7 +66,7 @@ function showLoginScreen() {
               placeholder="Nhập mật khẩu">
           </div>
           
-          <button type="submit" 
+          <button type="submit" id="loginButton"
             class="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition duration-200">
             <i class="fas fa-sign-in-alt mr-2"></i>Đăng nhập
           </button>
@@ -85,30 +78,26 @@ function showLoginScreen() {
         
         <div class="mt-8 p-4 bg-blue-50 rounded-lg">
           <p class="text-sm font-semibold text-gray-700 mb-2">
-            <i class="fas fa-info-circle mr-2 text-blue-600"></i>Tài khoản test:
+            <i class="fas fa-info-circle mr-2 text-blue-600"></i>Thông tin đăng nhập:
           </p>
           <div class="space-y-2 text-sm text-gray-600">
             <div class="flex justify-between">
-              <span><strong>admin</strong> / admin123</span>
+              <span><strong>an.nguyen</strong> / 123456</span>
               <span class="text-xs text-gray-500">Admin</span>
             </div>
             <div class="flex justify-between">
-              <span><strong>manager</strong> / manager123</span>
+              <span><strong>binh.tran</strong> / 123456</span>
               <span class="text-xs text-gray-500">BIM Manager</span>
             </div>
             <div class="flex justify-between">
-              <span><strong>coordinator</strong> / coord123</span>
-              <span class="text-xs text-gray-500">BIM Coordinator</span>
-            </div>
-            <div class="flex justify-between">
-              <span><strong>modeler</strong> / model123</span>
+              <span><strong>cuong.le</strong> / 123456</span>
               <span class="text-xs text-gray-500">BIM Modeler</span>
             </div>
           </div>
         </div>
         
         <p class="mt-6 text-center text-xs text-gray-500">
-          <i class="fas fa-lock mr-1"></i>Demo authentication for testing purposes
+          <i class="fas fa-lock mr-1"></i>Database authentication system
         </p>
       </div>
     </div>
@@ -119,46 +108,55 @@ function showLoginScreen() {
   document.getElementById('mainApp').classList.add('hidden');
   
   // Handle login form submit
-  document.getElementById('loginForm').addEventListener('submit', (e) => {
+  document.getElementById('loginForm').addEventListener('submit', async (e) => {
     e.preventDefault();
     const username = document.getElementById('username').value;
     const password = document.getElementById('password').value;
+    const loginButton = document.getElementById('loginButton');
+    const errorDiv = document.getElementById('loginError');
     
-    if (login(username, password)) {
+    // Disable button during login
+    loginButton.disabled = true;
+    loginButton.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Đang đăng nhập...';
+    
+    const result = await login(username, password);
+    
+    if (result.success) {
       document.getElementById('loginScreen').classList.add('hidden');
       document.getElementById('mainApp').classList.remove('hidden');
       updateUserInfo();
       showView('dashboard');
     } else {
-      const errorDiv = document.getElementById('loginError');
-      errorDiv.querySelector('span').textContent = 'Tên đăng nhập hoặc mật khẩu không đúng';
+      errorDiv.querySelector('span').textContent = result.error;
       errorDiv.classList.remove('hidden');
+      loginButton.disabled = false;
+      loginButton.innerHTML = '<i class="fas fa-sign-in-alt mr-2"></i>Đăng nhập';
     }
   });
 }
 
-// Change password function
-function changePassword(oldPassword, newPassword) {
+// Change password function - Uses database API
+async function changePassword(oldPassword, newPassword) {
   const user = getCurrentUser();
-  if (!user) return false;
+  if (!user) return { success: false, message: 'Vui lòng đăng nhập lại' };
   
-  // Get all accounts from localStorage (including test accounts)
-  let accounts = JSON.parse(localStorage.getItem('bim_accounts') || JSON.stringify(TEST_ACCOUNTS));
-  
-  // Find user account
-  const account = accounts.find(u => u.username === user.username);
-  if (!account) return false;
-  
-  // Verify old password
-  if (account.password !== oldPassword) {
-    return { success: false, message: 'Mật khẩu hiện tại không đúng' };
+  try {
+    const response = await axios.post('/api/auth/change-password', {
+      userId: user.id,
+      oldPassword: oldPassword,
+      newPassword: newPassword
+    });
+    
+    if (response.data.success) {
+      return { success: true, message: response.data.message };
+    }
+    
+    return { success: false, message: response.data.error || 'Đổi mật khẩu thất bại' };
+  } catch (error) {
+    console.error('Change password error:', error);
+    const errorMessage = error.response?.data?.error || 'Đổi mật khẩu thất bại. Vui lòng thử lại.';
+    return { success: false, message: errorMessage };
   }
-  
-  // Update password
-  account.password = newPassword;
-  localStorage.setItem('bim_accounts', JSON.stringify(accounts));
-  
-  return { success: true, message: 'Đổi mật khẩu thành công!' };
 }
 
 // Show change password modal
@@ -177,12 +175,15 @@ function closeChangePasswordModal() {
     modal.classList.add('hidden');
     modal.classList.remove('flex');
     document.getElementById('changePasswordForm').reset();
-    document.getElementById('passwordError').classList.add('hidden');
+    const errorDiv = document.getElementById('passwordError');
+    if (errorDiv) {
+      errorDiv.classList.add('hidden');
+    }
   }
 }
 
 // Handle change password form
-function handleChangePassword(event) {
+async function handleChangePassword(event) {
   event.preventDefault();
   const form = event.target;
   const oldPassword = form.oldPassword.value;
@@ -190,6 +191,7 @@ function handleChangePassword(event) {
   const confirmPassword = form.confirmPassword.value;
   
   const errorDiv = document.getElementById('passwordError');
+  const submitButton = form.querySelector('button[type="submit"]');
   
   if (newPassword !== confirmPassword) {
     errorDiv.querySelector('span').textContent = 'Mật khẩu mới không khớp';
@@ -203,7 +205,11 @@ function handleChangePassword(event) {
     return;
   }
   
-  const result = changePassword(oldPassword, newPassword);
+  // Disable button during request
+  submitButton.disabled = true;
+  submitButton.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Đang lưu...';
+  
+  const result = await changePassword(oldPassword, newPassword);
   
   if (result.success) {
     alert('✅ ' + result.message);
@@ -212,9 +218,13 @@ function handleChangePassword(event) {
     errorDiv.querySelector('span').textContent = result.message;
     errorDiv.classList.remove('hidden');
   }
+  
+  // Re-enable button
+  submitButton.disabled = false;
+  submitButton.innerHTML = '<i class="fas fa-save mr-2"></i>Lưu';
 }
 
-// Update user info in header with better contrast
+// Update user info in header
 function updateUserInfo() {
   const user = getCurrentUser();
   if (user) {
@@ -330,11 +340,6 @@ document.addEventListener('click', (e) => {
 
 // Check authentication on page load
 window.addEventListener('DOMContentLoaded', () => {
-  // Initialize accounts in localStorage if not exists
-  if (!localStorage.getItem('bim_accounts')) {
-    localStorage.setItem('bim_accounts', JSON.stringify(TEST_ACCOUNTS));
-  }
-  
   if (!isLoggedIn()) {
     showLoginScreen();
   } else {

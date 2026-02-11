@@ -10,6 +10,24 @@ const app = new Hono<{ Bindings: Bindings }>()
 // Enable CORS for all API routes
 app.use('/api/*', cors())
 
+// ==================== UTILITY FUNCTIONS ====================
+
+// Simple password hashing using Web Crypto API (SHA-256)
+async function hashPassword(password: string): Promise<string> {
+  const encoder = new TextEncoder()
+  const data = encoder.encode(password)
+  const hashBuffer = await crypto.subtle.digest('SHA-256', data)
+  const hashArray = Array.from(new Uint8Array(hashBuffer))
+  const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('')
+  return hashHex
+}
+
+// Verify password
+async function verifyPassword(password: string, hashedPassword: string): Promise<boolean> {
+  const hash = await hashPassword(password)
+  return hash === hashedPassword
+}
+
 // ==================== API ROUTES ====================
 
 // Dashboard API - Tổng quan thống kê
@@ -84,6 +102,200 @@ app.get('/api/dashboard/stats', async (c) => {
     })
   } catch (error) {
     return c.json({ error: 'Failed to fetch dashboard stats' }, 500)
+  }
+})
+
+// ==================== AUTHENTICATION API ====================
+
+// Login API - Database Authentication
+app.post('/api/auth/login', async (c) => {
+  const db = c.env.DB
+  
+  try {
+    const body = await c.req.json()
+    const { username, password } = body
+    
+    if (!username || !password) {
+      return c.json({ error: 'Username and password are required' }, 400)
+    }
+    
+    // Find user by username
+    const user = await db.prepare(`
+      SELECT 
+        id, 
+        name, 
+        email, 
+        username, 
+        password_hash, 
+        position, 
+        role,
+        status,
+        manager_id,
+        hourly_rate
+      FROM staff 
+      WHERE username = ? AND status = 'active'
+    `).bind(username).first()
+    
+    if (!user) {
+      return c.json({ error: 'Invalid username or password' }, 401)
+    }
+    
+    // Verify password
+    const isValid = await verifyPassword(password, user.password_hash as string)
+    
+    if (!isValid) {
+      return c.json({ error: 'Invalid username or password' }, 401)
+    }
+    
+    // Get managers for this user (if coordinator)
+    let managers = []
+    if (user.role === 'BIM Coordinator') {
+      const managersResult = await db.prepare(`
+        SELECT s.id, s.name, s.email, s.position
+        FROM staff_managers sm
+        JOIN staff s ON sm.manager_id = s.id
+        WHERE sm.staff_id = ? AND sm.is_active = 1
+      `).bind(user.id).all()
+      managers = managersResult.results
+    }
+    
+    // Return user info (without password)
+    return c.json({
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      username: user.username,
+      position: user.position,
+      role: user.role,
+      manager_id: user.manager_id,
+      hourly_rate: user.hourly_rate,
+      managers: managers
+    })
+    
+  } catch (error) {
+    console.error('Login error:', error)
+    return c.json({ error: 'Login failed' }, 500)
+  }
+})
+
+// Change Password API
+app.post('/api/auth/change-password', async (c) => {
+  const db = c.env.DB
+  
+  try {
+    const body = await c.req.json()
+    const { userId, oldPassword, newPassword } = body
+    
+    if (!userId || !oldPassword || !newPassword) {
+      return c.json({ error: 'All fields are required' }, 400)
+    }
+    
+    // Get current user
+    const user = await db.prepare(`
+      SELECT id, password_hash FROM staff WHERE id = ?
+    `).bind(userId).first()
+    
+    if (!user) {
+      return c.json({ error: 'User not found' }, 404)
+    }
+    
+    // Verify old password
+    const isValid = await verifyPassword(oldPassword, user.password_hash as string)
+    
+    if (!isValid) {
+      return c.json({ error: 'Current password is incorrect' }, 401)
+    }
+    
+    // Hash new password
+    const newHash = await hashPassword(newPassword)
+    
+    // Update password
+    await db.prepare(`
+      UPDATE staff 
+      SET password_hash = ?, updated_at = CURRENT_TIMESTAMP
+      WHERE id = ?
+    `).bind(newHash, userId).run()
+    
+    return c.json({ success: true, message: 'Password changed successfully' })
+    
+  } catch (error) {
+    console.error('Change password error:', error)
+    return c.json({ error: 'Failed to change password' }, 500)
+  }
+})
+
+// Get Current User Info (with hierarchy)
+app.get('/api/auth/me/:userId', async (c) => {
+  const db = c.env.DB
+  const userId = c.req.param('userId')
+  
+  try {
+    // Get user info
+    const user = await db.prepare(`
+      SELECT 
+        s.id, 
+        s.name, 
+        s.email, 
+        s.username, 
+        s.position, 
+        s.role,
+        s.status,
+        s.manager_id,
+        s.hourly_rate,
+        m.name as manager_name
+      FROM staff s
+      LEFT JOIN staff m ON s.manager_id = m.id
+      WHERE s.id = ?
+    `).bind(userId).first()
+    
+    if (!user) {
+      return c.json({ error: 'User not found' }, 404)
+    }
+    
+    // Get all managers (for coordinators with multiple managers)
+    let managers = []
+    if (user.role === 'BIM Coordinator') {
+      const managersResult = await db.prepare(`
+        SELECT s.id, s.name, s.email, s.position
+        FROM staff_managers sm
+        JOIN staff s ON sm.manager_id = s.id
+        WHERE sm.staff_id = ? AND sm.is_active = 1
+      `).bind(userId).all()
+      managers = managersResult.results
+    }
+    
+    // Get team members (if manager or coordinator)
+    let team = []
+    if (user.role === 'BIM Manager') {
+      // Get coordinators under this manager
+      const teamResult = await db.prepare(`
+        SELECT s.id, s.name, s.email, s.position, s.role
+        FROM staff_managers sm
+        JOIN staff s ON sm.staff_id = s.id
+        WHERE sm.manager_id = ? AND sm.is_active = 1 AND s.status = 'active'
+        ORDER BY s.name
+      `).bind(userId).all()
+      team = teamResult.results
+    } else if (user.role === 'BIM Coordinator') {
+      // Get modelers under this coordinator
+      const teamResult = await db.prepare(`
+        SELECT id, name, email, position, role
+        FROM staff
+        WHERE manager_id = ? AND status = 'active'
+        ORDER BY name
+      `).bind(userId).all()
+      team = teamResult.results
+    }
+    
+    return c.json({
+      ...user,
+      managers: managers,
+      team: team
+    })
+    
+  } catch (error) {
+    console.error('Get user info error:', error)
+    return c.json({ error: 'Failed to get user info' }, 500)
   }
 })
 
@@ -1161,13 +1373,13 @@ app.get('/', (c) => {
         <div id="modals-container"></div>
 
         <script src="https://cdn.jsdelivr.net/npm/axios@1.6.0/dist/axios.min.js"></script>
-        <script src="/static/lang-vi.js?v=2.5.2"></script>
-        <script src="/static/auth.js?v=2.5.2"></script>
-        <script src="/static/project-detail.js?v=2.5.2"></script>
-        <script src="/static/task-detail.js?v=2.5.2"></script>
-        <script src="/static/staff-detail.js?v=2.5.2"></script>
-        <script src="/static/modals.js?v=2.5.2"></script>
-        <script src="/static/app.js?v=2.5.2"></script>
+        <script src="/static/lang-vi.js?v=2.6.0"></script>
+        <script src="/static/auth.js?v=2.6.0"></script>
+        <script src="/static/project-detail.js?v=2.6.0"></script>
+        <script src="/static/task-detail.js?v=2.6.0"></script>
+        <script src="/static/staff-detail.js?v=2.6.0"></script>
+        <script src="/static/modals.js?v=2.6.0"></script>
+        <script src="/static/app.js?v=2.6.0"></script>
     </body>
     </html>
   `)
