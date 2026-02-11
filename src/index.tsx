@@ -426,8 +426,8 @@ app.post('/api/tasks', async (c) => {
   
   try {
     const result = await db.prepare(`
-      INSERT INTO tasks (project_id, category_id, discipline_id, title, description, assigned_to, estimated_hours, priority, status, due_date)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      INSERT INTO tasks (project_id, category_id, discipline_id, title, description, assigned_to, estimated_hours, priority, status, due_date, progress)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `).bind(
       body.project_id,
       body.category_id || null,
@@ -438,13 +438,36 @@ app.post('/api/tasks', async (c) => {
       body.estimated_hours || 0,
       body.priority || 'medium',
       body.status || 'todo',
-      body.due_date || null
+      body.due_date || null,
+      body.progress || 0
     ).run()
     
     return c.json({ id: result.meta.last_row_id, ...body }, 201)
   } catch (error) {
     return c.json({ error: 'Failed to create task' }, 500)
   }
+})
+
+app.get('/api/tasks/:id', async (c) => {
+  const db = c.env.DB
+  const id = c.req.param('id')
+  
+  const task = await db.prepare(`
+    SELECT t.*, s.name as assigned_name, p.name as project_name, 
+           d.name as discipline_name, c.name as category_name
+    FROM tasks t
+    LEFT JOIN staff s ON t.assigned_to = s.id
+    LEFT JOIN projects p ON t.project_id = p.id
+    LEFT JOIN disciplines d ON t.discipline_id = d.id
+    LEFT JOIN categories c ON t.category_id = c.id
+    WHERE t.id = ?
+  `).bind(id).first()
+  
+  if (!task) {
+    return c.json({ error: 'Task not found' }, 404)
+  }
+  
+  return c.json(task)
 })
 
 app.put('/api/tasks/:id', async (c) => {
@@ -456,7 +479,7 @@ app.put('/api/tasks/:id', async (c) => {
     await db.prepare(`
       UPDATE tasks SET
         title = ?, description = ?, assigned_to = ?, estimated_hours = ?,
-        priority = ?, status = ?, due_date = ?, updated_at = CURRENT_TIMESTAMP
+        priority = ?, status = ?, due_date = ?, progress = ?, updated_at = CURRENT_TIMESTAMP
       WHERE id = ?
     `).bind(
       body.title,
@@ -466,6 +489,7 @@ app.put('/api/tasks/:id', async (c) => {
       body.priority,
       body.status,
       body.due_date,
+      body.progress || 0,
       id
     ).run()
     
@@ -1071,6 +1095,7 @@ app.get('/', (c) => {
         <script src="/static/lang-vi.js"></script>
         <script src="/static/auth.js"></script>
         <script src="/static/project-detail.js"></script>
+        <script src="/static/task-detail.js"></script>
         <script src="/static/modals.js"></script>
         <script src="/static/app.js"></script>
     </body>
