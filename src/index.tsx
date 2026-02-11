@@ -1026,7 +1026,7 @@ app.get('/', (c) => {
                                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Họ tên</th>
                                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Email</th>
                                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Chức vụ</th>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Lương/giờ</th>
+                                        <th class="salary-column px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Lương/giờ</th>
                                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Trạng thái</th>
                                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Thao tác</th>
                                     </tr>

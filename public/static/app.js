@@ -213,7 +213,7 @@ async function loadStaff() {
         </td>
         <td class="px-6 py-4 text-sm text-gray-700">${s.email}</td>
         <td class="px-6 py-4 text-sm text-gray-700">${s.position}</td>
-        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">${formatCurrency(s.hourly_rate)}/giờ</td>
+        <td class="salary-column px-6 py-4 whitespace-nowrap text-sm text-gray-700">${formatCurrency(s.hourly_rate)}/giờ</td>
         <td class="px-6 py-4 whitespace-nowrap text-sm">${getStatusBadge(s.status, 'project')}</td>
         <td class="px-6 py-4 whitespace-nowrap text-sm">
           <button onclick="viewStaffDetail(${s.id})" class="text-primary hover:text-secondary" title="Xem chi tiết">
@@ -620,6 +620,11 @@ function viewTaskDetail(id) {
 }
 
 // ==================== INITIALIZE ====================
+// Export utility functions globally
+window.getStatusBadge = getStatusBadge;
+window.formatCurrency = formatCurrency;
+window.showView = showView;
+
 // Apply role-based UI permissions
 function applyRolePermissions() {
   const user = window.getCurrentUser();
@@ -644,16 +649,15 @@ function applyRolePermissions() {
   
   // Hide finance tab in project detail for non-admins
   if (role !== 'Admin') {
-    // Will be handled in project-detail.js
     window.userCanViewFinances = false;
   } else {
     window.userCanViewFinances = true;
   }
   
-  // Hide salary column for non-admins
-  if (role !== 'Admin') {
-    const salaryHeaders = document.querySelectorAll('.salary-header');
-    salaryHeaders.forEach(el => el.style.display = 'none');
+  // Hide salary columns for Coordinator and Modeler
+  if (role === 'BIM Coordinator' || role === 'BIM Modeler') {
+    const salaryColumns = document.querySelectorAll('.salary-column');
+    salaryColumns.forEach(el => el.style.display = 'none');
   }
   
   // Hide add buttons based on permissions
