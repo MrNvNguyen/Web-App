@@ -621,6 +621,34 @@ app.get('/api/disciplines', async (c) => {
   return c.json(result.results)
 })
 
+app.get('/api/disciplines/:id', async (c) => {
+  const db = c.env.DB
+  const id = c.req.param('id')
+  const result = await db.prepare('SELECT * FROM disciplines WHERE id = ?').bind(id).first()
+  if (!result) {
+    return c.json({ error: 'Discipline not found' }, 404)
+  }
+  return c.json(result)
+})
+
+app.put('/api/disciplines/:id', async (c) => {
+  const db = c.env.DB
+  const id = c.req.param('id')
+  const body = await c.req.json()
+  
+  try {
+    await db.prepare(`
+      UPDATE disciplines 
+      SET name = ?, code = ?, description = ?
+      WHERE id = ?
+    `).bind(body.name, body.code, body.description, id).run()
+    
+    return c.json({ success: true })
+  } catch (error) {
+    return c.json({ error: 'Failed to update discipline' }, 500)
+  }
+})
+
 // Expense Types API
 app.get('/api/expense-types', async (c) => {
   const db = c.env.DB

@@ -1,5 +1,151 @@
 // Modal HTML templates and form handlers
 const modalTemplates = `
+<!-- Category Modal -->
+<div id="categoryModal" class="modal fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+  <div class="bg-white rounded-lg p-6 w-full max-w-lg mx-4">
+    <div class="flex justify-between items-center mb-4">
+      <h3 class="text-xl font-bold text-gray-800">Thêm Hạng mục</h3>
+      <button onclick="closeModal('categoryModal')" class="text-gray-500 hover:text-gray-700">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+    <form id="categoryForm" onsubmit="handleCategorySubmit(event)">
+      <div class="space-y-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Tên hạng mục *</label>
+          <input type="text" name="name" required placeholder="VD: Thiết kế kiến trúc" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary">
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Mã hạng mục *</label>
+          <input type="text" name="code" required placeholder="VD: TKKT" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary">
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Mô tả</label>
+          <textarea name="description" rows="3" placeholder="Mô tả chi tiết về hạng mục..." class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary"></textarea>
+        </div>
+      </div>
+      <div class="flex justify-end space-x-3 mt-6">
+        <button type="button" onclick="closeModal('categoryModal')" class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50">
+          Hủy
+        </button>
+        <button type="submit" class="px-4 py-2 bg-primary text-white rounded-lg hover:bg-secondary">
+          Thêm
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Add Task in Project Modal -->
+<div id="addProjectTaskModal" class="modal fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+  <div class="bg-white rounded-lg p-6 w-full max-w-2xl mx-4">
+    <div class="flex justify-between items-center mb-4">
+      <h3 class="text-xl font-bold text-gray-800">Thêm Nhiệm vụ</h3>
+      <button onclick="closeModal('addProjectTaskModal')" class="text-gray-500 hover:text-gray-700">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+    <form id="addProjectTaskForm" onsubmit="handleProjectTaskSubmit(event)">
+      <div class="space-y-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Tiêu đề *</label>
+          <input type="text" name="title" required placeholder="VD: Mô hình 3D tầng 1" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary">
+        </div>
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Hạng mục</label>
+            <select name="category_id" id="project-task-category" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary">
+              <option value="">-- Chọn hạng mục --</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Bộ môn</label>
+            <select name="discipline_id" id="project-task-discipline" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary">
+              <option value="">-- Chọn bộ môn --</option>
+            </select>
+          </div>
+        </div>
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Giao cho</label>
+            <select name="assigned_to" id="project-task-assignee" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary">
+              <option value="">-- Chọn nhân sự --</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Giờ dự kiến</label>
+            <input type="number" name="estimated_hours" step="0.5" min="0" value="8" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary">
+          </div>
+        </div>
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Ưu tiên</label>
+            <select name="priority" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary">
+              <option value="low">Thấp</option>
+              <option value="medium" selected>Trung bình</option>
+              <option value="high">Cao</option>
+              <option value="urgent">Khẩn cấp</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Hạn hoàn thành</label>
+            <input type="date" name="due_date" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary">
+          </div>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Mô tả</label>
+          <textarea name="description" rows="3" placeholder="Mô tả chi tiết nhiệm vụ..." class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary"></textarea>
+        </div>
+      </div>
+      <div class="flex justify-end space-x-3 mt-6">
+        <button type="button" onclick="closeModal('addProjectTaskModal')" class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50">
+          Hủy
+        </button>
+        <button type="submit" class="px-4 py-2 bg-primary text-white rounded-lg hover:bg-secondary">
+          Thêm
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Edit Discipline Modal -->
+<div id="editDisciplineModal" class="modal fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+  <div class="bg-white rounded-lg p-6 w-full max-w-lg mx-4">
+    <div class="flex justify-between items-center mb-4">
+      <h3 class="text-xl font-bold text-gray-800">Chỉnh sửa Bộ môn</h3>
+      <button onclick="closeModal('editDisciplineModal')" class="text-gray-500 hover:text-gray-700">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+    <form id="editDisciplineForm" onsubmit="handleEditDisciplineSubmit(event)">
+      <input type="hidden" name="id" id="edit-discipline-id">
+      <div class="space-y-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Tên bộ môn *</label>
+          <input type="text" name="name" id="edit-discipline-name" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary">
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Mã bộ môn *</label>
+          <input type="text" name="code" id="edit-discipline-code" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary">
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Mô tả</label>
+          <textarea name="description" id="edit-discipline-description" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary"></textarea>
+        </div>
+      </div>
+      <div class="flex justify-end space-x-3 mt-6">
+        <button type="button" onclick="closeModal('editDisciplineModal')" class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50">
+          Hủy
+        </button>
+        <button type="submit" class="px-4 py-2 bg-primary text-white rounded-lg hover:bg-secondary">
+          Lưu
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
 <!-- Expense Type Modal -->
 <div id="expenseTypeModal" class="modal fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
   <div class="bg-white rounded-lg p-6 w-full max-w-md mx-4">
@@ -646,6 +792,109 @@ async function handleFinanceSubmit(event) {
     loadDashboard(); // Refresh dashboard stats
   } catch (error) {
     alert('Lỗi: ' + (error.response?.data?.error || 'Không thể thêm giao dịch'));
+  }
+}
+
+// ==================== CATEGORY FORM HANDLER ====================
+async function handleCategorySubmit(event) {
+  event.preventDefault();
+  const form = event.target;
+  const formData = new FormData(form);
+  const data = Object.fromEntries(formData);
+  
+  // Get project_id from form dataset
+  const projectId = parseInt(form.dataset.projectId);
+  if (!projectId) {
+    alert('Lỗi: Không xác định được dự án');
+    return;
+  }
+  
+  data.project_id = projectId;
+  
+  try {
+    await axios.post('/api/categories', data);
+    alert('✅ Thêm hạng mục thành công!');
+    form.reset();
+    closeModal('categoryModal');
+    
+    // Reload categories in project detail
+    if (window.loadProjectCategories) {
+      window.loadProjectCategories(projectId);
+    }
+  } catch (error) {
+    alert('❌ Lỗi: ' + (error.response?.data?.error || 'Không thể thêm hạng mục'));
+  }
+}
+
+// ==================== PROJECT TASK FORM HANDLER ====================
+async function handleProjectTaskSubmit(event) {
+  event.preventDefault();
+  const form = event.target;
+  const formData = new FormData(form);
+  const data = Object.fromEntries(formData);
+  
+  // Get project_id from form dataset
+  const projectId = parseInt(form.dataset.projectId);
+  if (!projectId) {
+    alert('Lỗi: Không xác định được dự án');
+    return;
+  }
+  
+  data.project_id = projectId;
+  
+  // Convert to correct types
+  if (data.category_id) data.category_id = parseInt(data.category_id);
+  if (data.discipline_id) data.discipline_id = parseInt(data.discipline_id);
+  if (data.assigned_to) data.assigned_to = parseInt(data.assigned_to);
+  data.estimated_hours = parseFloat(data.estimated_hours || 0);
+  
+  try {
+    await axios.post('/api/tasks', data);
+    alert('✅ Thêm nhiệm vụ thành công!');
+    form.reset();
+    closeModal('addProjectTaskModal');
+    
+    // Reload tasks in project detail
+    if (window.loadProjectTasks) {
+      window.loadProjectTasks(projectId);
+    }
+    
+    // Also reload main tasks table if on that view
+    if (typeof loadTasks !== 'undefined') {
+      loadTasks();
+    }
+  } catch (error) {
+    alert('❌ Lỗi: ' + (error.response?.data?.error || 'Không thể thêm nhiệm vụ'));
+  }
+}
+
+// ==================== EDIT DISCIPLINE HANDLER ====================
+async function handleEditDisciplineSubmit(event) {
+  event.preventDefault();
+  const form = event.target;
+  const formData = new FormData(form);
+  const data = Object.fromEntries(formData);
+  
+  const disciplineId = parseInt(data.id);
+  if (!disciplineId) {
+    alert('Lỗi: Không xác định được bộ môn');
+    return;
+  }
+  
+  // Remove id from data (it's in URL)
+  delete data.id;
+  
+  try {
+    await axios.put(`/api/disciplines/${disciplineId}`, data);
+    alert('✅ Cập nhật bộ môn thành công!');
+    closeModal('editDisciplineModal');
+    
+    // Reload disciplines if in project detail
+    if (window.currentProjectId && window.loadProjectDisciplines) {
+      window.loadProjectDisciplines(window.currentProjectId);
+    }
+  } catch (error) {
+    alert('❌ Lỗi: ' + (error.response?.data?.error || 'Không thể cập nhật bộ môn'));
   }
 }
 `;

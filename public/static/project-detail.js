@@ -226,15 +226,26 @@ async function loadProjectDisciplines(projectId) {
     const { data: disciplines } = await axios.get('/api/disciplines');
     const { data: project } = await axios.get(`/api/projects/${projectId}`);
     
+    const user = window.getCurrentUser();
+    const isAdmin = user && user.role === 'Admin';
+    
     const html = `
       <div class="grid grid-cols-3 gap-4">
         ${disciplines.map(disc => `
-          <div class="border border-gray-200 rounded-lg p-4 hover:shadow-md transition text-center">
-            <div class="text-3xl mb-2">
-              ${getDisciplineIcon(disc.code)}
+          <div class="border border-gray-200 rounded-lg p-4 hover:shadow-md transition">
+            <div class="flex justify-between items-start mb-2">
+              <div class="text-3xl">
+                ${getDisciplineIcon(disc.code)}
+              </div>
+              ${isAdmin ? `
+                <button onclick="editDiscipline(${disc.id})" class="text-blue-600 hover:text-blue-800 text-sm" title="Chỉnh sửa">
+                  <i class="fas fa-edit"></i>
+                </button>
+              ` : ''}
             </div>
-            <h4 class="font-semibold text-gray-800">${disc.name}</h4>
-            <p class="text-xs text-gray-500">${disc.code}</p>
+            <h4 class="font-semibold text-gray-800 text-center">${disc.name}</h4>
+            <p class="text-xs text-gray-500 text-center">${disc.code}</p>
+            ${disc.description ? `<p class="text-xs text-gray-600 mt-2">${disc.description}</p>` : ''}
           </div>
         `).join('')}
       </div>
@@ -371,10 +382,68 @@ function openAddCategoryModal(projectId) {
   document.getElementById('categoryForm').dataset.projectId = projectId;
 }
 
+// Open Add Task Modal
+async function openAddTaskModal(projectId) {
+  // Load data for dropdowns
+  try {
+    const [categories, disciplines, staff] = await Promise.all([
+      axios.get(`/api/categories?project_id=${projectId}`),
+      axios.get('/api/disciplines'),
+      axios.get('/api/staff?status=active')
+    ]);
+    
+    // Populate category dropdown
+    const categorySelect = document.getElementById('project-task-category');
+    categorySelect.innerHTML = '<option value="">-- Chọn hạng mục --</option>' +
+      categories.data.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+    
+    // Populate discipline dropdown
+    const disciplineSelect = document.getElementById('project-task-discipline');
+    disciplineSelect.innerHTML = '<option value="">-- Chọn bộ môn --</option>' +
+      disciplines.data.map(d => `<option value="${d.id}">${d.name}</option>`).join('');
+    
+    // Populate assignee dropdown
+    const assigneeSelect = document.getElementById('project-task-assignee');
+    assigneeSelect.innerHTML = '<option value="">-- Chọn nhân sự --</option>' +
+      staff.data.map(s => `<option value="${s.id}">${s.name} - ${s.position}</option>`).join('');
+    
+    // Set project_id in form
+    document.getElementById('addProjectTaskForm').dataset.projectId = projectId;
+    
+    // Open modal
+    openModal('addProjectTaskModal');
+  } catch (error) {
+    console.error('Error loading task form data:', error);
+    alert('❌ Lỗi tải dữ liệu form. Vui lòng thử lại.');
+  }
+}
+
+// Edit discipline
+async function editDiscipline(disciplineId) {
+  try {
+    const { data: disc } = await axios.get(`/api/disciplines/${disciplineId}`);
+    
+    // Fill form
+    document.getElementById('edit-discipline-id').value = disc.id;
+    document.getElementById('edit-discipline-name').value = disc.name;
+    document.getElementById('edit-discipline-code').value = disc.code;
+    document.getElementById('edit-discipline-description').value = disc.description || '';
+    
+    // Open modal
+    openModal('editDisciplineModal');
+  } catch (error) {
+    console.error('Error loading discipline:', error);
+    alert('❌ Lỗi tải thông tin bộ môn');
+  }
+}
+
 // Make functions globally available
 window.showProjectDetail = showProjectDetail;
 window.switchProjectTab = switchProjectTab;
 window.closeProjectDetail = closeProjectDetail;
 window.openAddCategoryModal = openAddCategoryModal;
+window.openAddTaskModal = openAddTaskModal;
+window.editDiscipline = editDiscipline;
 window.loadProjectCategories = loadProjectCategories;
+window.loadProjectTasks = loadProjectTasks;
 window.getDisciplineIcon = getDisciplineIcon;
