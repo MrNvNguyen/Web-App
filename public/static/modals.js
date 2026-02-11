@@ -907,9 +907,12 @@ async function handleStaffSubmit(event) {
 
 async function handleTaskSubmit(event) {
   event.preventDefault();
+  console.log('📝 handleTaskSubmit called');
   const form = event.target;
   const formData = new FormData(form);
   const data = Object.fromEntries(formData);
+  
+  console.log('📋 Raw form data:', data);
   
   // Convert to correct types
   data.project_id = parseInt(data.project_id);
@@ -918,14 +921,21 @@ async function handleTaskSubmit(event) {
   data.assigned_to = data.assigned_to ? parseInt(data.assigned_to) : null;
   data.estimated_hours = parseFloat(data.estimated_hours) || 0;
   
+  console.log('✅ Processed data:', data);
+  
   try {
-    await axios.post('/api/tasks', data);
-    alert('Thêm nhiệm vụ thành công!');
+    console.log('🚀 Posting to /api/tasks...');
+    const response = await axios.post('/api/tasks', data);
+    console.log('✅ Task created successfully:', response.data);
+    alert('✅ Thêm nhiệm vụ thành công!');
     form.reset();
     closeModal('taskModal');
-    loadTasks(); // Reload tasks table
+    if (typeof loadTasks === 'function') {
+      loadTasks(); // Reload tasks table
+    }
   } catch (error) {
-    alert('Lỗi: ' + (error.response?.data?.error || 'Không thể thêm nhiệm vụ'));
+    console.error('❌ Error creating task:', error);
+    alert('❌ Lỗi: ' + (error.response?.data?.error || 'Không thể thêm nhiệm vụ'));
   }
 }
 
