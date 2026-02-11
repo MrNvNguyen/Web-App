@@ -1096,6 +1096,7 @@ app.get('/', (c) => {
         <script src="/static/auth.js"></script>
         <script src="/static/project-detail.js"></script>
         <script src="/static/task-detail.js"></script>
+        <script src="/static/staff-detail.js"></script>
         <script src="/static/modals.js"></script>
         <script src="/static/app.js"></script>
     </body>

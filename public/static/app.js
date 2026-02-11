@@ -120,12 +120,16 @@ async function loadProjects() {
     tbody.innerHTML = data.map(p => `
       <tr class="hover:bg-gray-50">
         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${p.code}</td>
-        <td class="px-6 py-4 text-sm text-gray-900">${p.name}</td>
+        <td class="px-6 py-4 text-sm">
+          <button onclick="showProjectDetail(${p.id})" class="text-primary hover:text-secondary font-medium hover:underline text-left">
+            ${p.name}
+          </button>
+        </td>
         <td class="px-6 py-4 text-sm text-gray-700">${p.client}</td>
         <td class="px-6 py-4 whitespace-nowrap text-sm">${getStatusBadge(p.status, 'project')}</td>
         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">${formatCurrency(p.contract_value)}</td>
         <td class="px-6 py-4 whitespace-nowrap text-sm">
-          <button onclick="viewProjectDetail(${p.id})" class="text-primary hover:text-secondary">
+          <button onclick="showProjectDetail(${p.id})" class="text-primary hover:text-secondary" title="Xem chi tiết">
             <i class="fas fa-eye"></i>
           </button>
         </td>
@@ -167,15 +171,29 @@ async function loadTasks() {
     const tbody = document.getElementById('tasks-table')
     tbody.innerHTML = data.map(t => `
       <tr class="hover:bg-gray-50">
-        <td class="px-6 py-4 text-sm font-medium text-gray-900">${t.title}</td>
+        <td class="px-6 py-4 text-sm">
+          <button onclick="showTaskDetail(${t.id})" class="text-primary hover:text-secondary font-medium hover:underline text-left">
+            ${t.title}
+          </button>
+        </td>
         <td class="px-6 py-4 text-sm text-gray-700">${t.project_name}</td>
         <td class="px-6 py-4 text-sm text-gray-700">${t.assigned_name || '-'}</td>
         <td class="px-6 py-4 whitespace-nowrap text-sm">${getStatusBadge(t.priority, 'priority')}</td>
         <td class="px-6 py-4 whitespace-nowrap text-sm">${getStatusBadge(t.status, 'task')}</td>
+        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
+          ${t.progress !== undefined ? `
+            <div class="flex items-center space-x-2">
+              <div class="w-20 bg-gray-200 rounded-full h-2">
+                <div class="bg-primary rounded-full h-2" style="width: ${t.progress}%"></div>
+              </div>
+              <span class="text-xs">${t.progress}%</span>
+            </div>
+          ` : '-'}
+        </td>
         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">${t.due_date || '-'}</td>
         <td class="px-6 py-4 whitespace-nowrap text-sm">
-          <button class="text-primary hover:text-secondary">
-            <i class="fas fa-edit"></i>
+          <button onclick="showTaskDetail(${t.id})" class="text-primary hover:text-secondary" title="Xem chi tiết">
+            <i class="fas fa-eye"></i>
           </button>
         </td>
       </tr>
@@ -508,13 +526,29 @@ async function handleFinanceSubmit(event) {
   }
 }
 
-// ==================== PLACEHOLDER FUNCTIONS ====================
+// ==================== DETAIL VIEW FUNCTIONS ====================
 function viewProjectDetail(id) {
-  alert('Chi tiết dự án #' + id + ' - Tính năng đang phát triển');
+  if (window.showProjectDetail) {
+    window.showProjectDetail(id);
+  } else {
+    console.error('Project detail function not loaded');
+  }
 }
 
 function viewStaffDetail(id) {
-  alert('Chi tiết nhân sự #' + id + ' - Tính năng đang phát triển');
+  if (window.showStaffDetail) {
+    window.showStaffDetail(id);
+  } else {
+    console.error('Staff detail function not loaded');
+  }
+}
+
+function viewTaskDetail(id) {
+  if (window.showTaskDetail) {
+    window.showTaskDetail(id);
+  } else {
+    console.error('Task detail function not loaded');
+  }
 }
 
 // ==================== INITIALIZE ====================
