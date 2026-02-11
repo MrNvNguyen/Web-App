@@ -1,0 +1,16 @@
+CREATE INDEX IF NOT EXISTS idx_projects_status ON projects(status);
+CREATE INDEX IF NOT EXISTS idx_projects_manager ON projects(manager_id);
+CREATE INDEX IF NOT EXISTS idx_categories_project ON categories(project_id);
+CREATE INDEX IF NOT EXISTS idx_disciplines_category ON disciplines(category_id);
+CREATE INDEX IF NOT EXISTS idx_tasks_project ON tasks(project_id);
+CREATE INDEX IF NOT EXISTS idx_tasks_category ON tasks(category_id);
+CREATE INDEX IF NOT EXISTS idx_tasks_discipline ON tasks(discipline_id);
+CREATE INDEX IF NOT EXISTS idx_tasks_assigned ON tasks(assigned_to);
+CREATE INDEX IF NOT EXISTS idx_tasks_status ON tasks(status);
+CREATE INDEX IF NOT EXISTS idx_timesheets_staff ON timesheets(staff_id);
+CREATE INDEX IF NOT EXISTS idx_timesheets_task ON timesheets(task_id);
+CREATE INDEX IF NOT EXISTS idx_timesheets_project ON timesheets(project_id);
+CREATE INDEX IF NOT EXISTS idx_timesheets_date ON timesheets(work_date);
+CREATE INDEX IF NOT EXISTS idx_finances_project ON finances(project_id);
+CREATE INDEX IF NOT EXISTS idx_finances_type ON finances(transaction_type);
+CREATE INDEX IF NOT EXISTS idx_finances_expense ON finances(expense_type_id);
