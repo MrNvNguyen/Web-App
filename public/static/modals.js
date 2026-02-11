@@ -528,9 +528,7 @@ const modalTemplates = `
 // Make modalTemplates available globally
 window.modalTemplates = modalTemplates;
 
-// Form handlers JavaScript (these are now in app.js)
-const formHandlers = `
-// Modal management
+// ==================== MODAL MANAGEMENT FUNCTIONS ====================
 function openModal(modalId) {
   const modal = document.getElementById(modalId);
   modal.classList.remove('hidden');
@@ -897,8 +895,27 @@ async function handleEditDisciplineSubmit(event) {
     alert('❌ Lỗi: ' + (error.response?.data?.error || 'Không thể cập nhật bộ môn'));
   }
 }
-`;
 
-// Make available globally for browser
-window.modalTemplates = modalTemplates;
-window.formHandlers = formHandlers;
+// ==================== EXPORT ALL FUNCTIONS ====================
+// Modal management
+window.openModal = openModal;
+window.closeModal = closeModal;
+
+// Show modal functions
+window.showExpenseTypeModal = showExpenseTypeModal;
+window.showProjectForm = showProjectForm;
+window.showStaffForm = showStaffForm;
+window.showTaskForm = showTaskForm;
+window.showTimesheetForm = showTimesheetForm;
+window.showFinanceForm = showFinanceForm;
+
+// Form handlers
+window.handleProjectSubmit = handleProjectSubmit;
+window.handleStaffSubmit = handleStaffSubmit;
+window.handleTaskSubmit = handleTaskSubmit;
+window.handleTimesheetSubmit = handleTimesheetSubmit;
+window.handleFinanceSubmit = handleFinanceSubmit;
+window.handleExpenseTypeSubmit = handleExpenseTypeSubmit;
+window.handleCategorySubmit = handleCategorySubmit;
+window.handleProjectTaskSubmit = handleProjectTaskSubmit;
+window.handleEditDisciplineSubmit = handleEditDisciplineSubmit;

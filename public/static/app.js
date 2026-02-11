@@ -69,13 +69,16 @@ async function loadDashboard() {
     document.getElementById('profit').textContent = profit.toFixed(2)
     
     // Display overdue tasks
-    const overdueTasks = data.overdueTasks || 0
+    const overdueTasks = data.overdueTasks?.count || 0
     const overdueEl = document.getElementById('overdue-tasks')
     if (overdueEl) {
       overdueEl.textContent = overdueTasks
-      overdueEl.parentElement.className = overdueTasks > 0 
-        ? 'bg-red-50 border-l-4 border-red-500 p-4 rounded' 
-        : 'bg-green-50 border-l-4 border-green-500 p-4 rounded'
+      const container = document.getElementById('overdue-container')
+      if (container) {
+        container.className = overdueTasks > 0 
+          ? 'bg-red-50 border-l-4 border-red-500 p-4 rounded' 
+          : 'bg-green-50 border-l-4 border-green-500 p-4 rounded'
+      }
     }
     
     // Display staff performance
@@ -84,7 +87,7 @@ async function loadDashboard() {
       if (perfTableBody) {
         perfTableBody.innerHTML = data.staffPerformance.map(s => `
           <tr class="hover:bg-gray-50">
-            <td class="px-4 py-3 text-sm text-gray-900">${s.staff_name}</td>
+            <td class="px-4 py-3 text-sm text-gray-900">${s.name || 'N/A'}</td>
             <td class="px-4 py-3 text-sm text-center">${s.total_tasks || 0}</td>
             <td class="px-4 py-3 text-sm text-center">${s.completed_tasks || 0}</td>
             <td class="px-4 py-3 text-sm text-center">${s.total_hours || 0}h</td>
@@ -118,7 +121,15 @@ async function loadDashboard() {
           backgroundColor: ['#FCD34D', '#60A5FA', '#A78BFA', '#FB923C', '#34D399']
         }]
       },
-      options: { responsive: true, maintainAspectRatio: true }
+      options: { 
+        responsive: true, 
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            position: 'bottom'
+          }
+        }
+      }
     })
     
     // Task Status Chart
@@ -135,7 +146,15 @@ async function loadDashboard() {
           backgroundColor: '#0066CC'
         }]
       },
-      options: { responsive: true, maintainAspectRatio: true }
+      options: { 
+        responsive: true, 
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            display: false
+          }
+        }
+      }
     })
   } catch (error) {
     console.error('Error loading dashboard:', error)

@@ -889,7 +889,7 @@ app.get('/', (c) => {
                     
                     <!-- Stats Cards -->
                     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
-                        <div class="card bg-white p-6 rounded-lg shadow">
+                        <div class="card bg-white p-6 rounded-lg shadow cursor-pointer hover:shadow-lg transition" onclick="showView('projects')">
                             <div class="flex items-center justify-between">
                                 <div>
                                     <p class="text-gray-500 text-sm">Tổng Dự án</p>
@@ -898,7 +898,7 @@ app.get('/', (c) => {
                                 <i class="fas fa-building text-4xl text-primary opacity-20"></i>
                             </div>
                         </div>
-                        <div class="card bg-white p-6 rounded-lg shadow">
+                        <div class="card bg-white p-6 rounded-lg shadow cursor-pointer hover:shadow-lg transition" onclick="showView('staff')">
                             <div class="flex items-center justify-between">
                                 <div>
                                     <p class="text-gray-500 text-sm">Nhân sự</p>
@@ -907,7 +907,7 @@ app.get('/', (c) => {
                                 <i class="fas fa-users text-4xl text-green-600 opacity-20"></i>
                             </div>
                         </div>
-                        <div class="card bg-white p-6 rounded-lg shadow">
+                        <div class="card bg-white p-6 rounded-lg shadow cursor-pointer hover:shadow-lg transition" onclick="showView('tasks')">
                             <div class="flex items-center justify-between">
                                 <div>
                                     <p class="text-gray-500 text-sm">Nhiệm vụ đang làm</p>
@@ -927,15 +927,19 @@ app.get('/', (c) => {
                         </div>
                     </div>
 
-                    <!-- Charts -->
+                    <!-- Charts - Compact -->
                     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-                        <div class="bg-white p-6 rounded-lg shadow">
-                            <h3 class="text-lg font-semibold mb-4">Trạng thái Dự án</h3>
-                            <canvas id="projectStatusChart"></canvas>
+                        <div class="bg-white p-4 rounded-lg shadow">
+                            <h3 class="text-base font-semibold mb-3">Trạng thái Dự án</h3>
+                            <div style="height: 200px;">
+                                <canvas id="projectStatusChart"></canvas>
+                            </div>
                         </div>
-                        <div class="bg-white p-6 rounded-lg shadow">
-                            <h3 class="text-lg font-semibold mb-4">Trạng thái Nhiệm vụ</h3>
-                            <canvas id="taskStatusChart"></canvas>
+                        <div class="bg-white p-4 rounded-lg shadow">
+                            <h3 class="text-base font-semibold mb-3">Trạng thái Nhiệm vụ</h3>
+                            <div style="height: 200px;">
+                                <canvas id="taskStatusChart"></canvas>
+                            </div>
                         </div>
                     </div>
                     
