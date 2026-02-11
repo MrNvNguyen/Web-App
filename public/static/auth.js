@@ -9,6 +9,11 @@ const TEST_ACCOUNTS = [
   { username: 'modeler', password: 'model123', name: 'Lê Văn Cường', role: 'BIM Modeler', email: 'cuong.le@onecad.vn' }
 ];
 
+// Initialize accounts in localStorage if not exists
+if (!localStorage.getItem('bim_accounts')) {
+  localStorage.setItem('bim_accounts', JSON.stringify(TEST_ACCOUNTS));
+}
+
 // Check if user is logged in
 function isLoggedIn() {
   return localStorage.getItem('bim_user') !== null;

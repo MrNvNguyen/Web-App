@@ -712,13 +712,33 @@ async function handleStaffSubmit(event) {
   data.hourly_rate = parseFloat(data.hourly_rate) || 0;
   
   try {
-    await axios.post('/api/staff', data);
-    alert('Thêm nhân sự thành công!');
+    const response = await axios.post('/api/staff', data);
+    const newStaff = response.data;
+    
+    // Auto-create login account for new staff
+    // Generate username from email (part before @)
+    const username = data.email.split('@')[0];
+    // Default password: first name + "123"
+    const firstName = data.name.split(' ').pop().toLowerCase();
+    const password = firstName + '123';
+    
+    // Add to accounts in localStorage
+    const accounts = JSON.parse(localStorage.getItem('bim_accounts') || '[]');
+    accounts.push({
+      username: username,
+      password: password,
+      name: data.name,
+      role: data.position,
+      email: data.email
+    });
+    localStorage.setItem('bim_accounts', JSON.stringify(accounts));
+    
+    alert(`✅ Thêm nhân sự thành công!\n\n🔐 Thông tin đăng nhập:\nUsername: ${username}\nPassword: ${password}\n\n(Người dùng nên đổi mật khẩu sau lần đăng nhập đầu tiên)`);
     form.reset();
     closeModal('staffModal');
     loadStaff(); // Reload staff table
   } catch (error) {
-    alert('Lỗi: ' + (error.response?.data?.error || 'Không thể thêm nhân sự'));
+    alert('❌ Lỗi: ' + (error.response?.data?.error || 'Không thể thêm nhân sự'));
   }
 }
 
