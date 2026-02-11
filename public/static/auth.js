@@ -130,26 +130,122 @@ function showLoginScreen() {
   });
 }
 
-// Update user info in header
+// Change password function
+function changePassword(oldPassword, newPassword) {
+  const user = getCurrentUser();
+  if (!user) return false;
+  
+  // Get all accounts from localStorage (including test accounts)
+  let accounts = JSON.parse(localStorage.getItem('bim_accounts') || JSON.stringify(TEST_ACCOUNTS));
+  
+  // Find user account
+  const account = accounts.find(u => u.username === user.username);
+  if (!account) return false;
+  
+  // Verify old password
+  if (account.password !== oldPassword) {
+    return { success: false, message: 'Mật khẩu hiện tại không đúng' };
+  }
+  
+  // Update password
+  account.password = newPassword;
+  localStorage.setItem('bim_accounts', JSON.stringify(accounts));
+  
+  return { success: true, message: 'Đổi mật khẩu thành công!' };
+}
+
+// Show change password modal
+function showChangePasswordModal() {
+  const modal = document.getElementById('changePasswordModal');
+  if (modal) {
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+  }
+}
+
+// Close change password modal
+function closeChangePasswordModal() {
+  const modal = document.getElementById('changePasswordModal');
+  if (modal) {
+    modal.classList.add('hidden');
+    modal.classList.remove('flex');
+    document.getElementById('changePasswordForm').reset();
+    document.getElementById('passwordError').classList.add('hidden');
+  }
+}
+
+// Handle change password form
+function handleChangePassword(event) {
+  event.preventDefault();
+  const form = event.target;
+  const oldPassword = form.oldPassword.value;
+  const newPassword = form.newPassword.value;
+  const confirmPassword = form.confirmPassword.value;
+  
+  const errorDiv = document.getElementById('passwordError');
+  
+  if (newPassword !== confirmPassword) {
+    errorDiv.querySelector('span').textContent = 'Mật khẩu mới không khớp';
+    errorDiv.classList.remove('hidden');
+    return;
+  }
+  
+  if (newPassword.length < 6) {
+    errorDiv.querySelector('span').textContent = 'Mật khẩu phải có ít nhất 6 ký tự';
+    errorDiv.classList.remove('hidden');
+    return;
+  }
+  
+  const result = changePassword(oldPassword, newPassword);
+  
+  if (result.success) {
+    alert('✅ ' + result.message);
+    closeChangePasswordModal();
+  } else {
+    errorDiv.querySelector('span').textContent = result.message;
+    errorDiv.classList.remove('hidden');
+  }
+}
+
+// Update user info in header with better contrast
 function updateUserInfo() {
   const user = getCurrentUser();
   if (user) {
+    // Role colors with better contrast
+    const roleColors = {
+      'Admin': 'bg-red-100 text-red-800 border border-red-200',
+      'BIM Manager': 'bg-blue-100 text-blue-800 border border-blue-200',
+      'BIM Coordinator': 'bg-green-100 text-green-800 border border-green-200',
+      'BIM Modeler': 'bg-purple-100 text-purple-800 border border-purple-200'
+    };
+    
+    const roleColorClass = roleColors[user.role] || 'bg-gray-100 text-gray-800';
+    
     const userInfoHTML = `
       <div class="flex items-center space-x-3">
         <div class="text-right">
-          <p class="text-sm font-semibold text-gray-800">${user.name}</p>
-          <p class="text-xs text-gray-500">${user.role}</p>
+          <p class="text-sm font-bold text-white">${user.name}</p>
+          <span class="inline-block px-2 py-1 rounded-full text-xs font-semibold ${roleColorClass}">
+            ${user.role}
+          </span>
         </div>
         <div class="relative">
-          <button onclick="toggleUserMenu()" class="flex items-center space-x-2 hover:bg-gray-100 px-3 py-2 rounded-lg transition">
-            <div class="w-10 h-10 rounded-full bg-primary text-white flex items-center justify-center font-semibold">
+          <button onclick="toggleUserMenu()" class="flex items-center space-x-2 hover:bg-blue-700 px-3 py-2 rounded-lg transition">
+            <div class="w-10 h-10 rounded-full bg-white text-primary flex items-center justify-center font-bold text-lg border-2 border-white shadow-lg">
               ${user.name.charAt(0).toUpperCase()}
             </div>
-            <i class="fas fa-chevron-down text-gray-500 text-sm"></i>
+            <i class="fas fa-chevron-down text-white text-sm"></i>
           </button>
-          <div id="userMenu" class="hidden absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 z-50">
+          <div id="userMenu" class="hidden absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-xl border border-gray-200 z-50">
             <div class="py-2">
-              <a href="#" onclick="logout()" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+              <div class="px-4 py-2 border-b border-gray-200">
+                <p class="text-xs text-gray-500">Đăng nhập với</p>
+                <p class="text-sm font-semibold text-gray-800">${user.email}</p>
+              </div>
+              <a href="#" onclick="showChangePasswordModal(); toggleUserMenu(); return false;" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                <i class="fas fa-key mr-2 text-blue-600"></i>Đổi mật khẩu
+              </a>
+              <a href="#" onclick="logout(); return false;" class="block px-4 py-2 text-sm text-red-600 hover:bg-red-50">
                 <i class="fas fa-sign-out-alt mr-2"></i>Đăng xuất
               </a>
             </div>
@@ -161,6 +257,50 @@ function updateUserInfo() {
     const userInfoContainer = document.getElementById('userInfo');
     if (userInfoContainer) {
       userInfoContainer.innerHTML = userInfoHTML;
+    }
+    
+    // Add change password modal if not exists
+    if (!document.getElementById('changePasswordModal')) {
+      const modalHTML = `
+        <div id="changePasswordModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+          <div class="bg-white rounded-lg p-6 w-full max-w-md mx-4">
+            <div class="flex justify-between items-center mb-4">
+              <h3 class="text-xl font-bold text-gray-800">Đổi mật khẩu</h3>
+              <button onclick="closeChangePasswordModal()" class="text-gray-500 hover:text-gray-700">
+                <i class="fas fa-times"></i>
+              </button>
+            </div>
+            <form id="changePasswordForm" onsubmit="handleChangePassword(event)">
+              <div class="space-y-4">
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-1">Mật khẩu hiện tại *</label>
+                  <input type="password" name="oldPassword" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary">
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-1">Mật khẩu mới *</label>
+                  <input type="password" name="newPassword" required minlength="6" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary">
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-1">Xác nhận mật khẩu mới *</label>
+                  <input type="password" name="confirmPassword" required minlength="6" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary">
+                </div>
+              </div>
+              <div id="passwordError" class="hidden mt-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded-lg text-sm">
+                <i class="fas fa-exclamation-circle mr-2"></i><span></span>
+              </div>
+              <div class="flex justify-end space-x-3 mt-6">
+                <button type="button" onclick="closeChangePasswordModal()" class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50">
+                  Hủy
+                </button>
+                <button type="submit" class="px-4 py-2 bg-primary text-white rounded-lg hover:bg-secondary">
+                  <i class="fas fa-save mr-2"></i>Lưu
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      `;
+      document.body.insertAdjacentHTML('beforeend', modalHTML);
     }
   }
 }
@@ -183,6 +323,11 @@ document.addEventListener('click', (e) => {
 
 // Check authentication on page load
 window.addEventListener('DOMContentLoaded', () => {
+  // Initialize accounts in localStorage if not exists
+  if (!localStorage.getItem('bim_accounts')) {
+    localStorage.setItem('bim_accounts', JSON.stringify(TEST_ACCOUNTS));
+  }
+  
   if (!isLoggedIn()) {
     showLoginScreen();
   } else {
@@ -190,11 +335,38 @@ window.addEventListener('DOMContentLoaded', () => {
   }
 });
 
+// Permission helper functions
+function hasPermission(action) {
+  const user = getCurrentUser();
+  if (!user) return false;
+  
+  const permissions = {
+    'Admin': ['all'],
+    'BIM Manager': ['view_all', 'manage_projects', 'manage_staff', 'manage_tasks', 'manage_timesheets', 'view_finances'],
+    'BIM Coordinator': ['view_projects', 'manage_projects', 'manage_categories', 'manage_disciplines', 'manage_tasks', 'view_staff', 'manage_timesheets'],
+    'BIM Modeler': ['view_projects', 'view_tasks', 'update_task_status', 'add_tasks', 'manage_own_timesheets']
+  };
+  
+  const userPermissions = permissions[user.role] || [];
+  return userPermissions.includes('all') || userPermissions.includes(action);
+}
+
+function canViewSalary() {
+  const user = getCurrentUser();
+  return user && user.role === 'Admin';
+}
+
 // Make functions globally available
 window.isLoggedIn = isLoggedIn;
 window.getCurrentUser = getCurrentUser;
 window.login = login;
 window.logout = logout;
+window.changePassword = changePassword;
 window.showLoginScreen = showLoginScreen;
 window.updateUserInfo = updateUserInfo;
 window.toggleUserMenu = toggleUserMenu;
+window.showChangePasswordModal = showChangePasswordModal;
+window.closeChangePasswordModal = closeChangePasswordModal;
+window.handleChangePassword = handleChangePassword;
+window.hasPermission = hasPermission;
+window.canViewSalary = canViewSalary;
