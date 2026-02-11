@@ -13,6 +13,22 @@
 - **GitHub Repository:** https://github.com/MrNvNguyen/Web-App
 - **Source Code Backup:** https://www.genspark.ai/api/files/s/siC71ntG
 
+## 🔧 FIX LỖI D1 CONSOLE QUAN TRỌNG!
+
+**❌ Lỗi:** "The request is malformed: Requests without any query are not supported"
+
+**✅ Giải pháp:** Đã tạo 6 file SQL tối ưu (không comments, format 1 dòng):
+- 📁 `d1-1-tables-oneline.sql` - Tạo 9 tables
+- 📁 `d1-2-indexes-oneline.sql` - Tạo 16 indexes
+- 📁 `d1-3-seed1-oneline.sql` - Import Disciplines, Expense Types, Staff
+- 📁 `d1-4-seed2-oneline.sql` - Import Projects, Categories
+- 📁 `d1-5-seed3-oneline.sql` - Import Tasks
+- 📁 `d1-6-seed4-oneline.sql` - Import Timesheets, Finances
+
+**📖 Hướng dẫn chi tiết:**
+- [QUICK_FIX_D1.md](./QUICK_FIX_D1.md) - Hướng dẫn nhanh
+- [FINAL_FIX_D1.md](./FINAL_FIX_D1.md) - Hướng dẫn đầy đủ
+
 ## ✨ Tính năng Chính
 
 ### ⭐ **Phase 2a - MỚI CẬP NHẬT!**
