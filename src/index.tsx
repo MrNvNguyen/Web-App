@@ -299,25 +299,70 @@ app.get('/api/auth/me/:userId', async (c) => {
   }
 })
 
-// Projects API
+// Projects API - With Hierarchy Filtering
 app.get('/api/projects', async (c) => {
   const db = c.env.DB
   const status = c.req.query('status')
+  const currentUserId = c.req.query('currentUserId')
+  const currentUserRole = c.req.query('currentUserRole')
   
-  let query = `
-    SELECT p.*, s.name as manager_name
-    FROM projects p
-    LEFT JOIN staff s ON p.project_manager_id = s.id
-  `
-  
-  if (status) {
-    query += ` WHERE p.status = ?`
-    const result = await db.prepare(query).bind(status).all()
+  try {
+    let query = `
+      SELECT p.*, s.name as manager_name
+      FROM projects p
+      LEFT JOIN staff s ON p.project_manager_id = s.id
+    `
+    let conditions = []
+    let params = []
+    
+    // Apply hierarchy filtering
+    if (currentUserRole === 'BIM Manager' && currentUserId) {
+      // Manager sees: projects they manage OR projects managed by their coordinators
+      conditions.push(`(
+        p.project_manager_id = ?
+        OR p.project_manager_id IN (
+          SELECT staff_id FROM staff_managers 
+          WHERE manager_id = ? AND is_active = 1
+        )
+      )`)
+      params.push(currentUserId, currentUserId)
+    } else if (currentUserRole === 'BIM Coordinator' && currentUserId) {
+      // Coordinator sees: projects they're assigned to (via tasks)
+      conditions.push(`p.id IN (
+        SELECT DISTINCT project_id FROM tasks WHERE assigned_to = ?
+        UNION
+        SELECT DISTINCT project_id FROM categories WHERE id IN (
+          SELECT DISTINCT category_id FROM tasks WHERE assigned_to = ?
+        )
+      )`)
+      params.push(currentUserId, currentUserId)
+    } else if (currentUserRole === 'BIM Modeler' && currentUserId) {
+      // Modeler sees: only projects with tasks assigned to them
+      conditions.push(`p.id IN (
+        SELECT DISTINCT project_id FROM tasks WHERE assigned_to = ?
+      )`)
+      params.push(currentUserId)
+    }
+    // Admin sees all projects
+    
+    // Status filter
+    if (status) {
+      conditions.push('p.status = ?')
+      params.push(status)
+    }
+    
+    if (conditions.length > 0) {
+      query += ' WHERE ' + conditions.join(' AND ')
+    }
+    
+    query += ' ORDER BY p.created_at DESC'
+    
+    const result = await db.prepare(query).bind(...params).all()
     return c.json(result.results)
+  } catch (error) {
+    console.error('Projects API error:', error)
+    return c.json({ error: 'Failed to fetch projects' }, 500)
   }
-  
-  const result = await db.prepare(query).all()
-  return c.json(result.results)
 })
 
 app.get('/api/projects/:id', async (c) => {
@@ -487,21 +532,69 @@ app.post('/api/categories', async (c) => {
   }
 })
 
-// Staff API
+// Staff API - With Hierarchy Filtering
 app.get('/api/staff', async (c) => {
   const db = c.env.DB
   const status = c.req.query('status')
+  const currentUserId = c.req.query('currentUserId') // Pass from frontend
+  const currentUserRole = c.req.query('currentUserRole') // Pass from frontend
   
-  let query = 'SELECT * FROM staff'
-  
-  if (status) {
-    query += ' WHERE status = ?'
-    const result = await db.prepare(query).bind(status).all()
+  try {
+    let query = `
+      SELECT s.*, 
+        m.name as manager_name,
+        GROUP_CONCAT(sm2.manager_id) as all_manager_ids
+      FROM staff s
+      LEFT JOIN staff m ON s.manager_id = m.id
+      LEFT JOIN staff_managers sm2 ON s.id = sm2.staff_id AND sm2.is_active = 1
+    `
+    let conditions = []
+    let params = []
+    
+    // Apply hierarchy filtering based on role
+    if (currentUserRole === 'BIM Manager' && currentUserId) {
+      // Manager sees: coordinators under them + all modelers under those coordinators
+      conditions.push(`(
+        s.id IN (
+          SELECT staff_id FROM staff_managers 
+          WHERE manager_id = ? AND is_active = 1
+        )
+        OR s.manager_id IN (
+          SELECT staff_id FROM staff_managers 
+          WHERE manager_id = ? AND is_active = 1
+        )
+        OR s.id = ?
+      )`)
+      params.push(currentUserId, currentUserId, currentUserId)
+    } else if (currentUserRole === 'BIM Coordinator' && currentUserId) {
+      // Coordinator sees: only modelers directly under them
+      conditions.push('(s.manager_id = ? OR s.id = ?)')
+      params.push(currentUserId, currentUserId)
+    } else if (currentUserRole === 'BIM Modeler' && currentUserId) {
+      // Modeler sees: only themselves
+      conditions.push('s.id = ?')
+      params.push(currentUserId)
+    }
+    // Admin sees all (no filter)
+    
+    // Status filter
+    if (status) {
+      conditions.push('s.status = ?')
+      params.push(status)
+    }
+    
+    if (conditions.length > 0) {
+      query += ' WHERE ' + conditions.join(' AND ')
+    }
+    
+    query += ' GROUP BY s.id ORDER BY s.name'
+    
+    const result = await db.prepare(query).bind(...params).all()
     return c.json(result.results)
+  } catch (error) {
+    console.error('Staff API error:', error)
+    return c.json({ error: 'Failed to fetch staff' }, 500)
   }
-  
-  const result = await db.prepare(query).all()
-  return c.json(result.results)
 })
 
 app.get('/api/staff/:id', async (c) => {
@@ -591,45 +684,85 @@ app.put('/api/staff/:id', async (c) => {
   }
 })
 
-// Tasks API
+// Tasks API - With Hierarchy Filtering
 app.get('/api/tasks', async (c) => {
   const db = c.env.DB
   const projectId = c.req.query('project_id')
   const assignedTo = c.req.query('assigned_to')
   const status = c.req.query('status')
+  const currentUserId = c.req.query('currentUserId')
+  const currentUserRole = c.req.query('currentUserRole')
   
-  let query = `
-    SELECT t.*, s.name as assigned_name, p.name as project_name,
-           c.name as category_name, d.name as discipline_name
-    FROM tasks t
-    LEFT JOIN staff s ON t.assigned_to = s.id
-    LEFT JOIN projects p ON t.project_id = p.id
-    LEFT JOIN categories c ON t.category_id = c.id
-    LEFT JOIN disciplines d ON t.discipline_id = d.id
-    WHERE 1=1
-  `
-  
-  const bindings = []
-  
-  if (projectId) {
-    query += ' AND t.project_id = ?'
-    bindings.push(projectId)
+  try {
+    let query = `
+      SELECT t.*, s.name as assigned_name, p.name as project_name,
+             c.name as category_name, d.name as discipline_name
+      FROM tasks t
+      LEFT JOIN staff s ON t.assigned_to = s.id
+      LEFT JOIN projects p ON t.project_id = p.id
+      LEFT JOIN categories c ON t.category_id = c.id
+      LEFT JOIN disciplines d ON t.discipline_id = d.id
+      WHERE 1=1
+    `
+    
+    const bindings = []
+    
+    // Apply hierarchy filtering
+    if (currentUserRole === 'BIM Manager' && currentUserId) {
+      // Manager sees: tasks in their projects OR tasks assigned to their team
+      query += ` AND (
+        p.project_manager_id = ?
+        OR t.assigned_to IN (
+          SELECT staff_id FROM staff_managers 
+          WHERE manager_id = ? AND is_active = 1
+        )
+        OR t.assigned_to IN (
+          SELECT id FROM staff WHERE manager_id IN (
+            SELECT staff_id FROM staff_managers 
+            WHERE manager_id = ? AND is_active = 1
+          )
+        )
+      )`
+      bindings.push(currentUserId, currentUserId, currentUserId)
+    } else if (currentUserRole === 'BIM Coordinator' && currentUserId) {
+      // Coordinator sees: tasks assigned to them OR their modelers
+      query += ` AND (
+        t.assigned_to = ?
+        OR t.assigned_to IN (
+          SELECT id FROM staff WHERE manager_id = ?
+        )
+      )`
+      bindings.push(currentUserId, currentUserId)
+    } else if (currentUserRole === 'BIM Modeler' && currentUserId) {
+      // Modeler sees: only tasks assigned to them
+      query += ' AND t.assigned_to = ?'
+      bindings.push(currentUserId)
+    }
+    // Admin sees all tasks
+    
+    if (projectId) {
+      query += ' AND t.project_id = ?'
+      bindings.push(projectId)
+    }
+    
+    if (assignedTo) {
+      query += ' AND t.assigned_to = ?'
+      bindings.push(assignedTo)
+    }
+    
+    if (status) {
+      query += ' AND t.status = ?'
+      bindings.push(status)
+    }
+    
+    query += ' ORDER BY t.created_at DESC'
+    
+    const result = await db.prepare(query).bind(...bindings).all()
+    return c.json(result.results)
+  } catch (error) {
+    console.error('Tasks API error:', error)
+    return c.json({ error: 'Failed to fetch tasks' }, 500)
   }
-  
-  if (assignedTo) {
-    query += ' AND t.assigned_to = ?'
-    bindings.push(assignedTo)
-  }
-  
-  if (status) {
-    query += ' AND t.status = ?'
-    bindings.push(status)
-  }
-  
-  query += ' ORDER BY t.created_at DESC'
-  
-  const result = await db.prepare(query).bind(...bindings).all()
-  return c.json(result.results)
 })
 
 app.post('/api/tasks', async (c) => {
@@ -711,39 +844,79 @@ app.put('/api/tasks/:id', async (c) => {
   }
 })
 
-// Timesheets API
+// Timesheets API - With Hierarchy Filtering
 app.get('/api/timesheets', async (c) => {
   const db = c.env.DB
   const projectId = c.req.query('project_id')
   const staffId = c.req.query('staff_id')
+  const currentUserId = c.req.query('currentUserId')
+  const currentUserRole = c.req.query('currentUserRole')
   
-  let query = `
-    SELECT t.*, s.name as staff_name, p.name as project_name,
-           tsk.title as task_title, approver.name as approver_name
-    FROM timesheets t
-    JOIN staff s ON t.staff_id = s.id
-    JOIN projects p ON t.project_id = p.id
-    JOIN tasks tsk ON t.task_id = tsk.id
-    LEFT JOIN staff approver ON t.approved_by = approver.id
-    WHERE 1=1
-  `
-  
-  const bindings = []
-  
-  if (projectId) {
-    query += ' AND t.project_id = ?'
-    bindings.push(projectId)
+  try {
+    let query = `
+      SELECT t.*, s.name as staff_name, p.name as project_name,
+             tsk.title as task_title, approver.name as approver_name
+      FROM timesheets t
+      JOIN staff s ON t.staff_id = s.id
+      JOIN projects p ON t.project_id = p.id
+      JOIN tasks tsk ON t.task_id = tsk.id
+      LEFT JOIN staff approver ON t.approved_by = approver.id
+      WHERE 1=1
+    `
+    
+    const bindings = []
+    
+    // Apply hierarchy filtering
+    if (currentUserRole === 'BIM Manager' && currentUserId) {
+      // Manager sees: timesheets from their team
+      query += ` AND (
+        t.staff_id IN (
+          SELECT staff_id FROM staff_managers 
+          WHERE manager_id = ? AND is_active = 1
+        )
+        OR t.staff_id IN (
+          SELECT id FROM staff WHERE manager_id IN (
+            SELECT staff_id FROM staff_managers 
+            WHERE manager_id = ? AND is_active = 1
+          )
+        )
+        OR t.staff_id = ?
+      )`
+      bindings.push(currentUserId, currentUserId, currentUserId)
+    } else if (currentUserRole === 'BIM Coordinator' && currentUserId) {
+      // Coordinator sees: their timesheets + modelers' timesheets
+      query += ` AND (
+        t.staff_id = ?
+        OR t.staff_id IN (
+          SELECT id FROM staff WHERE manager_id = ?
+        )
+      )`
+      bindings.push(currentUserId, currentUserId)
+    } else if (currentUserRole === 'BIM Modeler' && currentUserId) {
+      // Modeler sees: only their own timesheets
+      query += ' AND t.staff_id = ?'
+      bindings.push(currentUserId)
+    }
+    // Admin sees all timesheets
+    
+    if (projectId) {
+      query += ' AND t.project_id = ?'
+      bindings.push(projectId)
+    }
+    
+    if (staffId) {
+      query += ' AND t.staff_id = ?'
+      bindings.push(staffId)
+    }
+    
+    query += ' ORDER BY t.work_date DESC LIMIT 100'
+    
+    const result = await db.prepare(query).bind(...bindings).all()
+    return c.json(result.results)
+  } catch (error) {
+    console.error('Timesheets API error:', error)
+    return c.json({ error: 'Failed to fetch timesheets' }, 500)
   }
-  
-  if (staffId) {
-    query += ' AND t.staff_id = ?'
-    bindings.push(staffId)
-  }
-  
-  query += ' ORDER BY t.work_date DESC LIMIT 100'
-  
-  const result = await db.prepare(query).bind(...bindings).all()
-  return c.json(result.results)
 })
 
 app.post('/api/timesheets', async (c) => {

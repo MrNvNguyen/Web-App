@@ -171,7 +171,14 @@ async function loadDashboard() {
 // ==================== LOAD PROJECTS ====================
 async function loadProjects() {
   try {
-    const { data } = await axios.get('/api/projects')
+    const user = getCurrentUser();
+    const params = {};
+    if (user) {
+      params.currentUserId = user.id;
+      params.currentUserRole = user.role;
+    }
+    
+    const { data } = await axios.get('/api/projects', { params })
     const tbody = document.getElementById('projects-table')
     tbody.innerHTML = data.map(p => `
       <tr class="hover:bg-gray-50">
@@ -204,7 +211,14 @@ async function loadProjects() {
 // ==================== LOAD STAFF ====================
 async function loadStaff() {
   try {
-    const { data } = await axios.get('/api/staff')
+    const user = getCurrentUser();
+    const params = {};
+    if (user) {
+      params.currentUserId = user.id;
+      params.currentUserRole = user.role;
+    }
+    
+    const { data } = await axios.get('/api/staff', { params })
     const tbody = document.getElementById('staff-table')
     if (!tbody) {
       console.error('Staff table element not found')
@@ -251,7 +265,14 @@ async function loadStaff() {
 // ==================== LOAD TASKS ====================
 async function loadTasks() {
   try {
-    const { data } = await axios.get('/api/tasks')
+    const user = getCurrentUser();
+    const params = {};
+    if (user) {
+      params.currentUserId = user.id;
+      params.currentUserRole = user.role;
+    }
+    
+    const { data } = await axios.get('/api/tasks', { params })
     const tbody = document.getElementById('tasks-table')
     tbody.innerHTML = data.map(t => `
       <tr class="hover:bg-gray-50">
@@ -290,7 +311,14 @@ async function loadTasks() {
 // ==================== LOAD TIMESHEETS ====================
 async function loadTimesheets() {
   try {
-    const { data } = await axios.get('/api/timesheets')
+    const user = getCurrentUser();
+    const params = {};
+    if (user) {
+      params.currentUserId = user.id;
+      params.currentUserRole = user.role;
+    }
+    
+    const { data } = await axios.get('/api/timesheets', { params })
     const tbody = document.getElementById('timesheets-table')
     tbody.innerHTML = data.map(t => `
       <tr class="hover:bg-gray-50">
