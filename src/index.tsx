@@ -825,11 +825,11 @@ app.get('/', (c) => {
                             <i class="fas fa-chart-line w-6"></i>
                             <span class="ml-3">Dashboard</span>
                         </a>
-                        <a href="#" onclick="showView('projects')" class="flex items-center px-4 py-3 text-gray-700 hover:bg-blue-50 hover:text-primary rounded-lg transition">
+                        <a href="#" onclick="showView('projects')" class="menu-projects flex items-center px-4 py-3 text-gray-700 hover:bg-blue-50 hover:text-primary rounded-lg transition">
                             <i class="fas fa-building w-6"></i>
                             <span class="ml-3">Quản lý Dự án</span>
                         </a>
-                        <a href="#" onclick="showView('staff')" class="flex items-center px-4 py-3 text-gray-700 hover:bg-blue-50 hover:text-primary rounded-lg transition">
+                        <a href="#" onclick="showView('staff')" class="menu-staff flex items-center px-4 py-3 text-gray-700 hover:bg-blue-50 hover:text-primary rounded-lg transition">
                             <i class="fas fa-users w-6"></i>
                             <span class="ml-3">Quản lý Nhân sự</span>
                         </a>
@@ -841,11 +841,11 @@ app.get('/', (c) => {
                             <i class="fas fa-clock w-6"></i>
                             <span class="ml-3">Timesheet</span>
                         </a>
-                        <a href="#" onclick="showView('finances')" class="flex items-center px-4 py-3 text-gray-700 hover:bg-blue-50 hover:text-primary rounded-lg transition">
+                        <a href="#" onclick="showView('finances')" class="menu-finances flex items-center px-4 py-3 text-gray-700 hover:bg-blue-50 hover:text-primary rounded-lg transition">
                             <i class="fas fa-dollar-sign w-6"></i>
                             <span class="ml-3">Quản lý Thu Chi</span>
                         </a>
-                        <a href="#" onclick="showView('expense-types')" class="flex items-center px-4 py-3 text-gray-700 hover:bg-blue-50 hover:text-primary rounded-lg transition">
+                        <a href="#" onclick="showView('expense-types')" class="menu-expense-types flex items-center px-4 py-3 text-gray-700 hover:bg-blue-50 hover:text-primary rounded-lg transition">
                             <i class="fas fa-tags w-6"></i>
                             <span class="ml-3">Loại Chi phí</span>
                         </a>
@@ -1019,6 +1019,7 @@ app.get('/', (c) => {
                                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Dự án</th>
                                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Nhiệm vụ</th>
                                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Giờ làm</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Giờ OT</th>
                                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Trạng thái</th>
                                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Thao tác</th>
                                     </tr>

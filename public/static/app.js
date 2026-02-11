@@ -215,6 +215,7 @@ async function loadTimesheets() {
         <td class="px-6 py-4 text-sm text-gray-700">${t.project_name}</td>
         <td class="px-6 py-4 text-sm text-gray-700">${t.task_title}</td>
         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${t.hours}h</td>
+        <td class="px-6 py-4 whitespace-nowrap text-sm text-orange-600 font-medium">${t.overtime_hours || 0}h</td>
         <td class="px-6 py-4 whitespace-nowrap text-sm">${getStatusBadge(t.status, 'task')}</td>
         <td class="px-6 py-4 whitespace-nowrap text-sm">
           <button class="text-green-600 hover:text-green-800">
@@ -552,8 +553,51 @@ function viewTaskDetail(id) {
 }
 
 // ==================== INITIALIZE ====================
+// Apply role-based UI permissions
+function applyRolePermissions() {
+  const user = window.getCurrentUser();
+  if (!user) return;
+  
+  const role = user.role;
+  
+  // Menu items to hide based on role
+  const menuPermissions = {
+    'BIM Coordinator': ['.menu-finances', '.menu-expense-types'],
+    'BIM Modeler': ['.menu-projects', '.menu-staff', '.menu-finances', '.menu-expense-types']
+  };
+  
+  // Hide menu items
+  if (menuPermissions[role]) {
+    menuPermissions[role].forEach(selector => {
+      const menuItem = document.querySelector(selector);
+      if (menuItem) menuItem.style.display = 'none';
+    });
+  }
+  
+  // Hide salary column for non-admins
+  if (role !== 'Admin') {
+    const salaryHeaders = document.querySelectorAll('.salary-header');
+    salaryHeaders.forEach(el => el.style.display = 'none');
+  }
+  
+  // Hide add buttons based on permissions
+  const addButtons = {
+    'BIM Modeler': ['.btn-add-project', '.btn-add-staff', '.btn-add-expense-type']
+  };
+  
+  if (addButtons[role]) {
+    addButtons[role].forEach(selector => {
+      const btn = document.querySelector(selector);
+      if (btn) btn.style.display = 'none';
+    });
+  }
+}
+
 window.onload = () => {
   showView('dashboard');
+  
+  // Apply role-based permissions
+  applyRolePermissions();
   
   // Insert modals HTML
   const modalsContainer = document.getElementById('modals-container');
