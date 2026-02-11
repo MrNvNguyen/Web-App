@@ -3,7 +3,7 @@
 ## 📋 Tổng quan Dự án
 
 **Tên dự án:** BIM Management System  
-**Phiên bản:** v2.0 - Phase 2a Complete  
+**Phiên bản:** v2.1 - Complete with Authentication  
 **Mục tiêu:** Hệ thống quản lý toàn diện cho các dự án BIM (Building Information Modeling) trong lĩnh vực xây dựng, hạ tầng và giao thông  
 **Công ty:** OneCad Vietnam - https://onecadvn.com
 
@@ -12,6 +12,19 @@
 - **Development (Sandbox):** https://3000-il1ec2okaahgchy9k3855-cbeee0f9.sandbox.novita.ai
 - **GitHub Repository:** https://github.com/MrNvNguyen/Web-App
 - **Source Code Backup:** https://www.genspark.ai/api/files/s/siC71ntG
+
+## 🔐 TÀI KHOẢN TEST (MỚI!)
+
+Hệ thống giờ có **đăng nhập**! Sử dụng các tài khoản sau để test:
+
+| Tên đăng nhập | Mật khẩu | Vai trò |
+|---------------|----------|---------|
+| **admin** | admin123 | Admin |
+| **manager** | manager123 | BIM Manager |
+| **coordinator** | coord123 | BIM Coordinator |
+| **modeler** | model123 | BIM Modeler |
+
+**📖 Hướng dẫn đầy đủ:** [COMPLETE_USER_GUIDE.md](./COMPLETE_USER_GUIDE.md)
 
 ## 🔧 FIX LỖI D1 CONSOLE QUAN TRỌNG!
 
