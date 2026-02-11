@@ -191,6 +191,11 @@ async function loadProjects() {
         </td>
       </tr>
     `).join('')
+    
+    // Re-apply permissions after rendering to hide columns
+    if (typeof applyRolePermissions !== 'undefined') {
+      applyRolePermissions();
+    }
   } catch (error) {
     console.error('Error loading projects:', error)
   }
@@ -229,6 +234,11 @@ async function loadStaff() {
         </td>
       </tr>
     `).join('')
+    
+    // Re-apply permissions after rendering to hide columns
+    if (typeof applyRolePermissions !== 'undefined') {
+      applyRolePermissions();
+    }
   } catch (error) {
     console.error('Error loading staff:', error)
     const tbody = document.getElementById('staff-table')

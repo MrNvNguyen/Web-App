@@ -547,19 +547,37 @@ function showExpenseTypeModal() {
 }
 
 function showProjectForm() {
-  loadStaffForSelect();
-  openModal('projectModal');
+  console.log('🎯 showProjectForm called');
+  try {
+    loadStaffForSelect();
+    openModal('projectModal');
+    console.log('✅ Project modal opened');
+  } catch (error) {
+    console.error('❌ Error in showProjectForm:', error);
+  }
 }
 
 function showStaffForm() {
-  openModal('staffModal');
+  console.log('🎯 showStaffForm called');
+  try {
+    openModal('staffModal');
+    console.log('✅ Staff modal opened');
+  } catch (error) {
+    console.error('❌ Error in showStaffForm:', error);
+  }
 }
 
 function showTaskForm() {
-  loadProjectsForSelect();
-  loadStaffForSelect();
-  loadDisciplinesForSelect();
-  openModal('taskModal');
+  console.log('🎯 showTaskForm called');
+  try {
+    loadProjectsForSelect();
+    loadStaffForSelect();
+    loadDisciplinesForSelect();
+    openModal('taskModal');
+    console.log('✅ Task modal opened');
+  } catch (error) {
+    console.error('❌ Error in showTaskForm:', error);
+  }
 }
 
 function showTimesheetForm() {
