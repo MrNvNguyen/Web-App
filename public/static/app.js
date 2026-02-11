@@ -10,6 +10,8 @@ function showView(viewName) {
     case 'dashboard': loadDashboard(); break;
     case 'projects': loadProjects(); break;
     case 'staff': loadStaff(); break;
+    case 'users': loadUsers(); break;
+    case 'my-team': loadMyTeam(); break;
     case 'tasks': loadTasks(); break;
     case 'timesheets': loadTimesheets(); break;
     case 'finances': loadFinances(); break;
@@ -574,24 +576,48 @@ function applyRolePermissions() {
   const role = user.role;
   console.log('🔐 Applying permissions for role:', role);
   
-  // Menu items to hide based on role
+  // Menu items visibility based on role
   const menuPermissions = {
-    'BIM Manager': ['.menu-finances', '.menu-expense-types'],  // Manager: Ẩn Finances & Expense Types
-    'BIM Coordinator': ['.menu-finances', '.menu-expense-types', '.menu-staff'],  // Coordinator: Ẩn Finances, Expense, Staff
-    'BIM Modeler': ['.menu-projects', '.menu-staff', '.menu-finances', '.menu-expense-types']  // Modeler: Chỉ Tasks & Timesheets
+    'Admin': {
+      show: ['.menu-users'],  // Admin: Show User Management
+      hide: ['.menu-my-team']  // Admin: Hide My Team
+    },
+    'BIM Manager': {
+      show: ['.menu-my-team'],  // Manager: Show My Team
+      hide: ['.menu-finances', '.menu-expense-types', '.menu-users']  // Manager: Hide Finances, Expense, Users
+    },
+    'BIM Coordinator': {
+      show: ['.menu-my-team'],  // Coordinator: Show My Team
+      hide: ['.menu-finances', '.menu-expense-types', '.menu-staff', '.menu-users']  // Coordinator: Hide Finances, Expense, Staff, Users
+    },
+    'BIM Modeler': {
+      show: [],  // Modeler: No special menus
+      hide: ['.menu-projects', '.menu-staff', '.menu-finances', '.menu-expense-types', '.menu-users', '.menu-my-team']  // Modeler: Only Tasks & Timesheets
+    }
   };
   
-  // Hide menu items
+  // Apply menu visibility
   if (menuPermissions[role]) {
-    menuPermissions[role].forEach(selector => {
-      const menuItem = document.querySelector(selector);
-      if (menuItem) {
-        menuItem.style.display = 'none';
-        console.log('✅ Hidden menu:', selector);
-      } else {
-        console.warn('⚠️ Menu not found:', selector);
-      }
-    });
+    // Hide menus
+    if (menuPermissions[role].hide) {
+      menuPermissions[role].hide.forEach(selector => {
+        const menuItem = document.querySelector(selector);
+        if (menuItem) {
+          menuItem.style.display = 'none';
+          console.log('✅ Hidden menu:', selector);
+        }
+      });
+    }
+    // Show menus (in case they were hidden)
+    if (menuPermissions[role].show) {
+      menuPermissions[role].show.forEach(selector => {
+        const menuItem = document.querySelector(selector);
+        if (menuItem) {
+          menuItem.style.display = 'flex';
+          console.log('✅ Shown menu:', selector);
+        }
+      });
+    }
   }
   
   // Hide finance tab in project detail for non-admins
@@ -627,6 +653,149 @@ function applyRolePermissions() {
     });
   }
 }
+
+// ==================== LOAD USERS (Admin Only) ====================
+async function loadUsers() {
+  try {
+    const user = getCurrentUser();
+    const params = {};
+    if (user) {
+      params.currentUserId = user.id;
+      params.currentUserRole = user.role;
+    }
+    
+    const { data } = await axios.get('/api/staff', { params });
+    const tbody = document.getElementById('users-table');
+    
+    if (!tbody) return;
+    
+    if (!data || data.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="8" class="px-6 py-4 text-center text-gray-500">Chưa có user nào</td></tr>';
+      return;
+    }
+    
+    const roleColors = {
+      'Admin': 'bg-red-100 text-red-800',
+      'BIM Manager': 'bg-blue-100 text-blue-800',
+      'BIM Coordinator': 'bg-green-100 text-green-800',
+      'BIM Modeler': 'bg-purple-100 text-purple-800'
+    };
+    
+    tbody.innerHTML = data.map(u => `
+      <tr class="hover:bg-gray-50">
+        <td class="px-6 py-4 text-sm font-medium text-gray-900">${u.name}</td>
+        <td class="px-6 py-4 text-sm text-gray-700">${u.username || '-'}</td>
+        <td class="px-6 py-4 text-sm text-gray-700">${u.email}</td>
+        <td class="px-6 py-4 text-sm">
+          <span class="px-2 py-1 text-xs font-semibold rounded-full ${roleColors[u.role] || 'bg-gray-100 text-gray-800'}">
+            ${u.role || '-'}
+          </span>
+        </td>
+        <td class="px-6 py-4 text-sm text-gray-700">${u.position || '-'}</td>
+        <td class="px-6 py-4 text-sm text-gray-700">${u.manager_name || '-'}</td>
+        <td class="px-6 py-4 text-sm">
+          ${getStatusBadge(u.status, 'project')}
+        </td>
+        <td class="px-6 py-4 text-sm space-x-2">
+          <button onclick="editUser(${u.id})" class="text-primary hover:text-secondary" title="Chỉnh sửa">
+            <i class="fas fa-edit"></i>
+          </button>
+        </td>
+      </tr>
+    `).join('');
+  } catch (error) {
+    console.error('Error loading users:', error);
+  }
+}
+
+// ==================== LOAD MY TEAM ====================
+async function loadMyTeam() {
+  try {
+    const user = getCurrentUser();
+    if (!user) return;
+    
+    const params = {
+      currentUserId: user.id,
+      currentUserRole: user.role
+    };
+    
+    const { data } = await axios.get('/api/staff', { params });
+    const container = document.getElementById('team-members-container');
+    
+    if (!container) return;
+    
+    // Filter out self
+    const teamMembers = data.filter(m => m.id !== user.id);
+    
+    if (teamMembers.length === 0) {
+      container.innerHTML = '<p class="text-gray-500 text-center py-8">Chưa có thành viên nào trong đội</p>';
+      return;
+    }
+    
+    const roleColors = {
+      'Admin': 'bg-red-100 text-red-800',
+      'BIM Manager': 'bg-blue-100 text-blue-800',
+      'BIM Coordinator': 'bg-green-100 text-green-800',
+      'BIM Modeler': 'bg-purple-100 text-purple-800'
+    };
+    
+    container.innerHTML = `
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        ${teamMembers.map(member => `
+          <div class="border rounded-lg p-4 hover:shadow-lg transition">
+            <div class="flex items-start justify-between mb-2">
+              <div class="flex items-center space-x-3">
+                <div class="w-12 h-12 rounded-full bg-primary text-white flex items-center justify-center font-bold text-lg">
+                  ${member.name.charAt(0).toUpperCase()}
+                </div>
+                <div>
+                  <h3 class="font-semibold text-gray-800">${member.name}</h3>
+                  <p class="text-sm text-gray-600">${member.position || '-'}</p>
+                </div>
+              </div>
+            </div>
+            <div class="mt-3 space-y-2">
+              <div class="flex items-center text-sm text-gray-600">
+                <i class="fas fa-envelope w-5 text-gray-400"></i>
+                <span class="ml-2">${member.email}</span>
+              </div>
+              <div class="flex items-center justify-between">
+                <span class="px-2 py-1 text-xs font-semibold rounded-full ${roleColors[member.role] || 'bg-gray-100 text-gray-800'}">
+                  ${member.role || '-'}
+                </span>
+                <button onclick="viewStaffDetail(${member.id})" class="text-primary hover:text-secondary text-sm">
+                  <i class="fas fa-eye mr-1"></i>Chi tiết
+                </button>
+              </div>
+            </div>
+          </div>
+        `).join('')}
+      </div>
+    `;
+  } catch (error) {
+    console.error('Error loading team:', error);
+  }
+}
+
+// Placeholder functions
+function showUserForm() {
+  alert('⚠️ Tính năng thêm user: Vui lòng sử dụng POST /api/staff để thêm user mới.');
+}
+
+function editUser(userId) {
+  alert(`⚠️ Tính năng chỉnh sửa user ${userId}: Đang phát triển.`);
+}
+
+function showAddTeamMemberForm() {
+  alert('⚠️ Tính năng thêm thành viên: Vui lòng sử dụng POST /api/staff để thêm thành viên mới.');
+}
+
+// Make functions globally available
+window.loadUsers = loadUsers;
+window.loadMyTeam = loadMyTeam;
+window.showUserForm = showUserForm;
+window.editUser = editUser;
+window.showAddTeamMemberForm = showAddTeamMemberForm;
 
 window.onload = () => {
   showView('dashboard');

@@ -1246,6 +1246,14 @@ app.get('/', (c) => {
                             <i class="fas fa-users w-6"></i>
                             <span class="ml-3">Quản lý Nhân sự</span>
                         </a>
+                        <a href="#" onclick="showView('users')" class="menu-users flex items-center px-4 py-3 text-gray-700 hover:bg-blue-50 hover:text-primary rounded-lg transition">
+                            <i class="fas fa-user-cog w-6"></i>
+                            <span class="ml-3">Quản lý Users</span>
+                        </a>
+                        <a href="#" onclick="showView('my-team')" class="menu-my-team flex items-center px-4 py-3 text-gray-700 hover:bg-blue-50 hover:text-primary rounded-lg transition">
+                            <i class="fas fa-user-friends w-6"></i>
+                            <span class="ml-3">Đội của tôi</span>
+                        </a>
                         <a href="#" onclick="showView('tasks')" class="flex items-center px-4 py-3 text-gray-700 hover:bg-blue-50 hover:text-primary rounded-lg transition">
                             <i class="fas fa-tasks w-6"></i>
                             <span class="ml-3">Quản lý Nhiệm vụ</span>
@@ -1513,6 +1521,54 @@ app.get('/', (c) => {
                     </div>
                 </div>
 
+                
+                <!-- User Management View (Admin Only) -->
+                <div id="view-users" class="view-content hidden">
+                    <div class="flex justify-between items-center mb-6">
+                        <h2 class="text-2xl font-bold text-gray-800">Quản lý Users</h2>
+                        <button onclick="showUserForm()" class="bg-primary text-white px-4 py-2 rounded-lg hover:bg-secondary transition">
+                            <i class="fas fa-plus mr-2"></i>Thêm User
+                        </button>
+                    </div>
+                    
+                    <div class="bg-white rounded-lg shadow overflow-hidden">
+                        <div class="table-container">
+                            <table class="min-w-full divide-y divide-gray-200">
+                                <thead class="bg-gray-50 sticky top-0">
+                                    <tr>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Họ tên</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Username</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Email</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Vai trò</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Chức vụ</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Quản lý</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Trạng thái</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Thao tác</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="users-table" class="bg-white divide-y divide-gray-200">
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- My Team View (Manager & Coordinator) -->
+                <div id="view-my-team" class="view-content hidden">
+                    <div class="flex justify-between items-center mb-6">
+                        <h2 class="text-2xl font-bold text-gray-800">Đội của tôi</h2>
+                        <button onclick="showAddTeamMemberForm()" class="bg-primary text-white px-4 py-2 rounded-lg hover:bg-secondary transition">
+                            <i class="fas fa-plus mr-2"></i>Thêm thành viên
+                        </button>
+                    </div>
+                    
+                    <div class="bg-white rounded-lg shadow p-6">
+                        <div id="team-members-container">
+                            <!-- Team members will be loaded here -->
+                        </div>
+                    </div>
+                </div>
+                
                 <!-- Expense Types View -->
                 <div id="view-expense-types" class="view-content hidden">
                     <div class="flex justify-between items-center mb-6">
