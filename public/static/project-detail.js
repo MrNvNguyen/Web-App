@@ -356,7 +356,41 @@ async function loadProjectFinances(projectId) {
 // Close project detail
 function closeProjectDetail() {
   currentProjectId = null;
-  showView('projects');
+  
+  // Restore projects view HTML structure
+  const projectsView = document.getElementById('view-projects');
+  projectsView.innerHTML = `
+    <div class="flex justify-between items-center mb-6">
+      <h2 class="text-2xl font-bold text-gray-800">Quản lý Dự án</h2>
+      <button onclick="showProjectForm()" class="bg-primary text-white px-4 py-2 rounded-lg hover:bg-secondary transition btn-add-project">
+        <i class="fas fa-plus mr-2"></i>Thêm Dự án
+      </button>
+    </div>
+    
+    <div class="bg-white rounded-lg shadow overflow-hidden">
+      <div class="table-container">
+        <table class="min-w-full divide-y divide-gray-200">
+          <thead class="bg-gray-50 sticky top-0">
+            <tr>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Mã DA</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Tên dự án</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Chủ đầu tư</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Trạng thái</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Giá trị HĐ</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Thao tác</th>
+            </tr>
+          </thead>
+          <tbody id="projects-table" class="bg-white divide-y divide-gray-200">
+          </tbody>
+        </table>
+      </div>
+    </div>
+  `;
+  
+  // Reload projects data
+  if (typeof loadProjects !== 'undefined') {
+    loadProjects();
+  }
 }
 
 // Get discipline icon
