@@ -779,15 +779,25 @@ async function loadMyTeam() {
 
 // Placeholder functions
 function showUserForm() {
-  alert('⚠️ Tính năng thêm user: Vui lòng sử dụng POST /api/staff để thêm user mới.');
+  // Open user modal (will be created)
+  if (typeof window.showAddUserModal !== 'undefined') {
+    window.showAddUserModal();
+  } else {
+    alert('⚠️ Modal chưa được load. Vui lòng refresh trang.');
+  }
 }
 
 function editUser(userId) {
-  alert(`⚠️ Tính năng chỉnh sửa user ${userId}: Đang phát triển.`);
+  if (typeof window.showEditUserModal !== 'undefined') {
+    window.showEditUserModal(userId);
+  } else {
+    alert(`⚠️ Tính năng chỉnh sửa user ${userId}: Modal chưa được load.`);
+  }
 }
 
 function showAddTeamMemberForm() {
-  alert('⚠️ Tính năng thêm thành viên: Vui lòng sử dụng POST /api/staff để thêm thành viên mới.');
+  // Reuse showUserForm since it's the same
+  showUserForm();
 }
 
 // Make functions globally available

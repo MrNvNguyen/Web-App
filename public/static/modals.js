@@ -523,6 +523,142 @@ const modalTemplates = `
     </form>
   </div>
 </div>
+
+<!-- Add User Modal -->
+<div id="addUserModal" class="modal fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+  <div class="bg-white rounded-lg p-6 w-full max-w-lg mx-4 max-h-screen overflow-y-auto">
+    <div class="flex justify-between items-center mb-4">
+      <h3 class="text-xl font-bold text-gray-800">Thêm User Mới</h3>
+      <button onclick="closeModal('addUserModal')" class="text-gray-500 hover:text-gray-700">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+    <form id="addUserForm" onsubmit="handleAddUserSubmit(event)">
+      <div class="space-y-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Họ tên *</label>
+          <input type="text" name="name" required placeholder="VD: Nguyễn Văn A" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary">
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Email *</label>
+          <input type="email" name="email" required placeholder="user@onecad.vn" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary">
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Chức vụ *</label>
+          <input type="text" name="position" required placeholder="VD: BIM Modeler" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary">
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Vai trò *</label>
+          <select name="role" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary">
+            <option value="">-- Chọn vai trò --</option>
+            <option value="Admin">Admin</option>
+            <option value="BIM Manager">BIM Manager</option>
+            <option value="BIM Coordinator">BIM Coordinator</option>
+            <option value="BIM Modeler">BIM Modeler</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Quản lý (Manager)</label>
+          <select name="manager_id" id="user-manager-select" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary">
+            <option value="">-- Không có manager --</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Lương/Giờ (VNĐ)</label>
+          <input type="number" name="hourly_rate" placeholder="VD: 100000" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary">
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Số điện thoại</label>
+          <input type="tel" name="phone" placeholder="VD: 0901234567" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary">
+        </div>
+        <div class="bg-blue-50 border border-blue-200 rounded-lg p-3">
+          <p class="text-sm text-blue-800">
+            <i class="fas fa-info-circle mr-2"></i>
+            <strong>Tự động tạo:</strong><br>
+            • Username: từ email (phần trước @)<br>
+            • Password mặc định: <code class="bg-blue-100 px-2 py-1 rounded">123456</code><br>
+            • User có thể đổi password sau khi đăng nhập lần đầu
+          </p>
+        </div>
+      </div>
+      <div class="flex justify-end space-x-3 mt-6">
+        <button type="button" onclick="closeModal('addUserModal')" class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50">
+          Hủy
+        </button>
+        <button type="submit" class="px-4 py-2 bg-primary text-white rounded-lg hover:bg-secondary">
+          <i class="fas fa-user-plus mr-2"></i>Tạo User
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Edit User Modal -->
+<div id="editUserModal" class="modal fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+  <div class="bg-white rounded-lg p-6 w-full max-w-lg mx-4 max-h-screen overflow-y-auto">
+    <div class="flex justify-between items-center mb-4">
+      <h3 class="text-xl font-bold text-gray-800">Chỉnh sửa User</h3>
+      <button onclick="closeModal('editUserModal')" class="text-gray-500 hover:text-gray-700">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+    <form id="editUserForm" onsubmit="handleEditUserSubmit(event)">
+      <input type="hidden" name="id" id="edit-user-id">
+      <div class="space-y-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Họ tên *</label>
+          <input type="text" name="name" id="edit-user-name" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary">
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Email *</label>
+          <input type="email" name="email" id="edit-user-email" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary">
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Chức vụ *</label>
+          <input type="text" name="position" id="edit-user-position" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary">
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Vai trò *</label>
+          <select name="role" id="edit-user-role" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary">
+            <option value="Admin">Admin</option>
+            <option value="BIM Manager">BIM Manager</option>
+            <option value="BIM Coordinator">BIM Coordinator</option>
+            <option value="BIM Modeler">BIM Modeler</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Quản lý (Manager)</label>
+          <select name="manager_id" id="edit-user-manager-select" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary">
+            <option value="">-- Không có manager --</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Lương/Giờ (VNĐ)</label>
+          <input type="number" name="hourly_rate" id="edit-user-hourly-rate" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary">
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Số điện thoại</label>
+          <input type="tel" name="phone" id="edit-user-phone" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary">
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Trạng thái</label>
+          <select name="status" id="edit-user-status" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary">
+            <option value="active">Active</option>
+            <option value="inactive">Inactive</option>
+          </select>
+        </div>
+      </div>
+      <div class="flex justify-end space-x-3 mt-6">
+        <button type="button" onclick="closeModal('editUserModal')" class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50">
+          Hủy
+        </button>
+        <button type="submit" class="px-4 py-2 bg-primary text-white rounded-lg hover:bg-secondary">
+          <i class="fas fa-save mr-2"></i>Lưu
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
 `;
 
 // Make modalTemplates available globally
@@ -966,3 +1102,146 @@ window.handleExpenseTypeSubmit = handleExpenseTypeSubmit;
 window.handleCategorySubmit = handleCategorySubmit;
 window.handleProjectTaskSubmit = handleProjectTaskSubmit;
 window.handleEditDisciplineSubmit = handleEditDisciplineSubmit;
+
+// User Management
+window.showAddUserModal = showAddUserModal;
+window.showEditUserModal = showEditUserModal;
+window.handleAddUserSubmit = handleAddUserSubmit;
+window.handleEditUserSubmit = handleEditUserSubmit;
+
+// ==================== USER MANAGEMENT FUNCTIONS ====================
+function showAddUserModal() {
+  // Load managers for select
+  loadManagersForUserSelect();
+  openModal('addUserModal');
+}
+
+async function showEditUserModal(userId) {
+  try {
+    // Get user data
+    const { data: user } = await axios.get(`/api/staff/${userId}`);
+    
+    // Fill form
+    document.getElementById('edit-user-id').value = user.id;
+    document.getElementById('edit-user-name').value = user.name;
+    document.getElementById('edit-user-email').value = user.email;
+    document.getElementById('edit-user-position').value = user.position || '';
+    document.getElementById('edit-user-role').value = user.role || '';
+    document.getElementById('edit-user-hourly-rate').value = user.hourly_rate || '';
+    document.getElementById('edit-user-phone').value = user.phone || '';
+    document.getElementById('edit-user-status').value = user.status || 'active';
+    
+    // Load managers and set current
+    await loadManagersForUserSelect('edit');
+    if (user.manager_id) {
+      document.getElementById('edit-user-manager-select').value = user.manager_id;
+    }
+    
+    openModal('editUserModal');
+  } catch (error) {
+    console.error('Error loading user:', error);
+    alert('❌ Lỗi tải thông tin user');
+  }
+}
+
+async function loadManagersForUserSelect(mode = 'add') {
+  try {
+    // Get all active staff who can be managers
+    const { data } = await axios.get('/api/staff?status=active');
+    
+    // Filter to show Admin, BIM Manager, BIM Coordinator as potential managers
+    const potentialManagers = data.filter(s => 
+      s.role === 'Admin' || s.role === 'BIM Manager' || s.role === 'BIM Coordinator'
+    );
+    
+    const selectId = mode === 'add' ? 'user-manager-select' : 'edit-user-manager-select';
+    const select = document.getElementById(selectId);
+    
+    if (!select) return;
+    
+    // Keep first option (-- Không có manager --)
+    const firstOption = select.options[0];
+    select.innerHTML = '';
+    select.appendChild(firstOption);
+    
+    // Add managers
+    potentialManagers.forEach(manager => {
+      const option = document.createElement('option');
+      option.value = manager.id;
+      option.textContent = `${manager.name} (${manager.role})`;
+      select.appendChild(option);
+    });
+  } catch (error) {
+    console.error('Error loading managers:', error);
+  }
+}
+
+async function handleAddUserSubmit(event) {
+  event.preventDefault();
+  const form = event.target;
+  const formData = new FormData(form);
+  const data = Object.fromEntries(formData);
+  
+  // Generate username from email (part before @)
+  const username = data.email.split('@')[0];
+  data.username = username;
+  
+  // Set default password (SHA-256 hash of "123456")
+  data.password_hash = '8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92';
+  
+  // Convert types
+  data.hourly_rate = parseFloat(data.hourly_rate) || 0;
+  data.manager_id = data.manager_id ? parseInt(data.manager_id) : null;
+  
+  // Set created_by to current user
+  const currentUser = window.getCurrentUser();
+  if (currentUser) {
+    data.created_by = currentUser.id;
+  }
+  
+  try {
+    const response = await axios.post('/api/staff', data);
+    alert(`✅ Tạo user thành công!\n\n` +
+          `Username: ${username}\n` +
+          `Password mặc định: 123456\n\n` +
+          `Vui lòng thông báo cho user để đăng nhập và đổi password.`);
+    form.reset();
+    closeModal('addUserModal');
+    
+    // Reload users table
+    if (typeof loadUsers !== 'undefined') {
+      loadUsers();
+    }
+  } catch (error) {
+    console.error('Error creating user:', error);
+    alert('❌ Lỗi: ' + (error.response?.data?.error || 'Không thể tạo user'));
+  }
+}
+
+async function handleEditUserSubmit(event) {
+  event.preventDefault();
+  const form = event.target;
+  const formData = new FormData(form);
+  const data = Object.fromEntries(formData);
+  
+  const userId = data.id;
+  delete data.id; // Remove id from data
+  
+  // Convert types
+  data.hourly_rate = parseFloat(data.hourly_rate) || 0;
+  data.manager_id = data.manager_id ? parseInt(data.manager_id) : null;
+  
+  try {
+    await axios.put(`/api/staff/${userId}`, data);
+    alert('✅ Cập nhật user thành công!');
+    closeModal('editUserModal');
+    
+    // Reload users table
+    if (typeof loadUsers !== 'undefined') {
+      loadUsers();
+    }
+  } catch (error) {
+    console.error('Error updating user:', error);
+    alert('❌ Lỗi: ' + (error.response?.data?.error || 'Không thể cập nhật user'));
+  }
+}
