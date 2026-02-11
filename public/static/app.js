@@ -14,6 +14,13 @@ function showView(viewName) {
     case 'timesheets': loadTimesheets(); break;
     case 'finances': loadFinances(); break;
   }
+  
+  // Re-apply permissions after view change (for columns)
+  setTimeout(() => {
+    if (typeof applyRolePermissions !== 'undefined') {
+      applyRolePermissions();
+    }
+  }, 100);
 }
 
 // ==================== STATUS BADGE HELPER ====================
@@ -527,6 +534,7 @@ function applyRolePermissions() {
   if (!user) return;
   
   const role = user.role;
+  console.log('🔐 Applying permissions for role:', role);
   
   // Menu items to hide based on role
   const menuPermissions = {
@@ -539,7 +547,12 @@ function applyRolePermissions() {
   if (menuPermissions[role]) {
     menuPermissions[role].forEach(selector => {
       const menuItem = document.querySelector(selector);
-      if (menuItem) menuItem.style.display = 'none';
+      if (menuItem) {
+        menuItem.style.display = 'none';
+        console.log('✅ Hidden menu:', selector);
+      } else {
+        console.warn('⚠️ Menu not found:', selector);
+      }
     });
   }
   
@@ -554,12 +567,14 @@ function applyRolePermissions() {
   if (role === 'BIM Coordinator' || role === 'BIM Modeler') {
     const salaryColumns = document.querySelectorAll('.salary-column, .salary-header');
     salaryColumns.forEach(el => el.style.display = 'none');
+    console.log('✅ Hidden salary columns:', salaryColumns.length);
   }
   
   // Hide contract value columns for Manager, Coordinator and Modeler
   if (role === 'BIM Manager' || role === 'BIM Coordinator' || role === 'BIM Modeler') {
     const contractColumns = document.querySelectorAll('.contract-value-column, .contract-value-header');
     contractColumns.forEach(el => el.style.display = 'none');
+    console.log('✅ Hidden contract columns:', contractColumns.length);
   }
   
   // Hide add buttons based on permissions

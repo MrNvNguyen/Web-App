@@ -1161,13 +1161,13 @@ app.get('/', (c) => {
         <div id="modals-container"></div>
 
         <script src="https://cdn.jsdelivr.net/npm/axios@1.6.0/dist/axios.min.js"></script>
-        <script src="/static/lang-vi.js"></script>
-        <script src="/static/auth.js"></script>
-        <script src="/static/project-detail.js"></script>
-        <script src="/static/task-detail.js"></script>
-        <script src="/static/staff-detail.js"></script>
-        <script src="/static/modals.js"></script>
-        <script src="/static/app.js"></script>
+        <script src="/static/lang-vi.js?v=2.5.1"></script>
+        <script src="/static/auth.js?v=2.5.1"></script>
+        <script src="/static/project-detail.js?v=2.5.1"></script>
+        <script src="/static/task-detail.js?v=2.5.1"></script>
+        <script src="/static/staff-detail.js?v=2.5.1"></script>
+        <script src="/static/modals.js?v=2.5.1"></script>
+        <script src="/static/app.js?v=2.5.1"></script>
     </body>
     </html>
   `)

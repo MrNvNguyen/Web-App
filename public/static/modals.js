@@ -683,23 +683,32 @@ async function handleExpenseTypeSubmit(event) {
 
 async function handleProjectSubmit(event) {
   event.preventDefault();
+  console.log('🚀 handleProjectSubmit called');
   const form = event.target;
   const formData = new FormData(form);
   const data = Object.fromEntries(formData);
+  
+  console.log('📝 Form data:', data);
   
   // Convert to numbers
   data.contract_value = parseFloat(data.contract_value) || 0;
   data.estimated_cost = parseFloat(data.estimated_cost) || 0;
   data.project_manager_id = data.project_manager_id ? parseInt(data.project_manager_id) : null;
   
+  console.log('✅ Processed data:', data);
+  
   try {
-    await axios.post('/api/projects', data);
-    alert('Thêm dự án thành công!');
+    const response = await axios.post('/api/projects', data);
+    console.log('✅ Server response:', response.data);
+    alert('✅ Thêm dự án thành công!');
     form.reset();
     closeModal('projectModal');
-    loadProjects(); // Reload projects table
+    if (typeof loadProjects !== 'undefined') {
+      loadProjects(); // Reload projects table
+    }
   } catch (error) {
-    alert('Lỗi: ' + (error.response?.data?.error || 'Không thể thêm dự án'));
+    console.error('❌ Error:', error);
+    alert('❌ Lỗi: ' + (error.response?.data?.error || 'Không thể thêm dự án'));
   }
 }
 
