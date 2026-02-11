@@ -68,6 +68,36 @@ async function loadDashboard() {
     const profit = (income - expense) / 1000000000
     document.getElementById('profit').textContent = profit.toFixed(2)
     
+    // Display overdue tasks
+    const overdueTasks = data.overdueTasks || 0
+    const overdueEl = document.getElementById('overdue-tasks')
+    if (overdueEl) {
+      overdueEl.textContent = overdueTasks
+      overdueEl.parentElement.className = overdueTasks > 0 
+        ? 'bg-red-50 border-l-4 border-red-500 p-4 rounded' 
+        : 'bg-green-50 border-l-4 border-green-500 p-4 rounded'
+    }
+    
+    // Display staff performance
+    if (data.staffPerformance && data.staffPerformance.length > 0) {
+      const perfTableBody = document.getElementById('staff-performance-table')
+      if (perfTableBody) {
+        perfTableBody.innerHTML = data.staffPerformance.map(s => `
+          <tr class="hover:bg-gray-50">
+            <td class="px-4 py-3 text-sm text-gray-900">${s.staff_name}</td>
+            <td class="px-4 py-3 text-sm text-center">${s.total_tasks || 0}</td>
+            <td class="px-4 py-3 text-sm text-center">${s.completed_tasks || 0}</td>
+            <td class="px-4 py-3 text-sm text-center">${s.total_hours || 0}h</td>
+            <td class="px-4 py-3 text-sm text-center">
+              <span class="font-semibold ${s.completion_rate >= 80 ? 'text-green-600' : s.completion_rate >= 50 ? 'text-yellow-600' : 'text-red-600'}">
+                ${s.completion_rate || 0}%
+              </span>
+            </td>
+          </tr>
+        `).join('')
+      }
+    }
+    
     // Destroy existing charts if they exist
     const projectChartCanvas = document.getElementById('projectStatusChart');
     const taskChartCanvas = document.getElementById('taskStatusChart');
@@ -145,15 +175,29 @@ async function loadStaff() {
   try {
     const { data } = await axios.get('/api/staff')
     const tbody = document.getElementById('staff-table')
+    if (!tbody) {
+      console.error('Staff table element not found')
+      return
+    }
+    
+    if (!data || data.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="6" class="px-6 py-4 text-center text-gray-500">Chưa có nhân sự nào</td></tr>'
+      return
+    }
+    
     tbody.innerHTML = data.map(s => `
       <tr class="hover:bg-gray-50">
-        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${s.name}</td>
+        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+          <button onclick="viewStaffDetail(${s.id})" class="text-primary hover:underline">
+            ${s.name}
+          </button>
+        </td>
         <td class="px-6 py-4 text-sm text-gray-700">${s.email}</td>
         <td class="px-6 py-4 text-sm text-gray-700">${s.position}</td>
-        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">${formatCurrency(s.hourly_rate)}</td>
+        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">${formatCurrency(s.hourly_rate)}/giờ</td>
         <td class="px-6 py-4 whitespace-nowrap text-sm">${getStatusBadge(s.status, 'project')}</td>
         <td class="px-6 py-4 whitespace-nowrap text-sm">
-          <button onclick="viewStaffDetail(${s.id})" class="text-primary hover:text-secondary">
+          <button onclick="viewStaffDetail(${s.id})" class="text-primary hover:text-secondary" title="Xem chi tiết">
             <i class="fas fa-eye"></i>
           </button>
         </td>
@@ -161,6 +205,10 @@ async function loadStaff() {
     `).join('')
   } catch (error) {
     console.error('Error loading staff:', error)
+    const tbody = document.getElementById('staff-table')
+    if (tbody) {
+      tbody.innerHTML = '<tr><td colspan="6" class="px-6 py-4 text-center text-red-500">❌ Lỗi tải dữ liệu nhân sự. Vui lòng thử lại.</td></tr>'
+    }
   }
 }
 
@@ -562,8 +610,9 @@ function applyRolePermissions() {
   
   // Menu items to hide based on role
   const menuPermissions = {
-    'BIM Coordinator': ['.menu-finances', '.menu-expense-types'],
-    'BIM Modeler': ['.menu-projects', '.menu-staff', '.menu-finances', '.menu-expense-types']
+    'BIM Manager': ['.menu-finances', '.menu-expense-types'],  // Manager: Ẩn Finances & Expense Types
+    'BIM Coordinator': ['.menu-finances', '.menu-expense-types', '.menu-staff'],  // Coordinator: Ẩn Finances, Expense, Staff
+    'BIM Modeler': ['.menu-projects', '.menu-staff', '.menu-finances', '.menu-expense-types']  // Modeler: Chỉ Tasks & Timesheets
   };
   
   // Hide menu items
@@ -572,6 +621,14 @@ function applyRolePermissions() {
       const menuItem = document.querySelector(selector);
       if (menuItem) menuItem.style.display = 'none';
     });
+  }
+  
+  // Hide finance tab in project detail for non-admins
+  if (role !== 'Admin') {
+    // Will be handled in project-detail.js
+    window.userCanViewFinances = false;
+  } else {
+    window.userCanViewFinances = true;
   }
   
   // Hide salary column for non-admins

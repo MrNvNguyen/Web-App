@@ -900,7 +900,7 @@ app.get('/', (c) => {
                     </div>
 
                     <!-- Charts -->
-                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
                         <div class="bg-white p-6 rounded-lg shadow">
                             <h3 class="text-lg font-semibold mb-4">Trạng thái Dự án</h3>
                             <canvas id="projectStatusChart"></canvas>
@@ -908,6 +908,42 @@ app.get('/', (c) => {
                         <div class="bg-white p-6 rounded-lg shadow">
                             <h3 class="text-lg font-semibold mb-4">Trạng thái Nhiệm vụ</h3>
                             <canvas id="taskStatusChart"></canvas>
+                        </div>
+                    </div>
+                    
+                    <!-- Overdue Tasks Alert -->
+                    <div class="mb-6">
+                        <div id="overdue-container" class="bg-red-50 border-l-4 border-red-500 p-4 rounded">
+                            <div class="flex items-center">
+                                <i class="fas fa-exclamation-triangle text-red-600 text-2xl mr-4"></i>
+                                <div>
+                                    <h3 class="font-semibold text-red-800">Nhiệm vụ Quá Hạn</h3>
+                                    <p class="text-red-700">
+                                        Có <span id="overdue-tasks" class="font-bold text-xl">0</span> nhiệm vụ đã quá hạn deadline cần xử lý khẩn cấp!
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Staff Performance -->
+                    <div class="bg-white rounded-lg shadow p-6">
+                        <h3 class="text-lg font-semibold mb-4">Hiệu suất Nhân sự (Top 5)</h3>
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full">
+                                <thead class="bg-gray-50">
+                                    <tr>
+                                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Nhân sự</th>
+                                        <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">Tổng Tasks</th>
+                                        <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">Hoàn thành</th>
+                                        <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">Tổng Giờ</th>
+                                        <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">Tỷ lệ (%)</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="staff-performance-table" class="divide-y divide-gray-200">
+                                    <!-- Populated by JS -->
+                                </tbody>
+                            </table>
                         </div>
                     </div>
                 </div>

@@ -8,6 +8,10 @@ async function showProjectDetail(projectId) {
   try {
     const { data: project } = await axios.get(`/api/projects/${projectId}`);
     
+    // Check user permissions
+    const user = window.getCurrentUser();
+    const canViewFinances = user && user.role === 'Admin';
+    
     const detailHTML = `
       <div class="bg-white rounded-lg shadow-lg">
         <!-- Header -->
@@ -38,9 +42,11 @@ async function showProjectDetail(projectId) {
             <button onclick="switchProjectTab('tasks')" id="tab-tasks" class="project-tab px-4 py-3 font-medium text-sm border-b-2 border-transparent text-gray-500 hover:text-gray-700">
               <i class="fas fa-tasks mr-2"></i>Nhiệm vụ
             </button>
+            ${canViewFinances ? `
             <button onclick="switchProjectTab('finances')" id="tab-finances" class="project-tab px-4 py-3 font-medium text-sm border-b-2 border-transparent text-gray-500 hover:text-gray-700">
               <i class="fas fa-dollar-sign mr-2"></i>Thu chi
             </button>
+            ` : ''}
           </nav>
         </div>
         
