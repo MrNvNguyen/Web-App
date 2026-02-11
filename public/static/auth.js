@@ -344,9 +344,9 @@ function hasPermission(action) {
   
   const permissions = {
     'Admin': ['all'],
-    'BIM Manager': ['view_all', 'manage_projects', 'manage_staff', 'manage_tasks', 'manage_timesheets', 'view_finances'],
-    'BIM Coordinator': ['view_projects', 'manage_projects', 'manage_categories', 'manage_disciplines', 'manage_tasks', 'view_staff', 'manage_timesheets'],
-    'BIM Modeler': ['view_projects', 'view_tasks', 'update_task_status', 'add_tasks', 'manage_own_timesheets']
+    'BIM Manager': ['view_all', 'manage_projects', 'manage_staff', 'manage_tasks', 'manage_timesheets', 'manage_disciplines', 'manage_categories'],
+    'BIM Coordinator': ['view_projects', 'manage_categories', 'manage_disciplines', 'manage_tasks', 'manage_timesheets', 'add_tasks'],
+    'BIM Modeler': ['view_projects', 'view_tasks', 'update_task_status', 'manage_own_timesheets']
   };
   
   const userPermissions = permissions[user.role] || [];

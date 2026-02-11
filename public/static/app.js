@@ -176,7 +176,7 @@ async function loadProjects() {
         </td>
         <td class="px-6 py-4 text-sm text-gray-700">${p.client}</td>
         <td class="px-6 py-4 whitespace-nowrap text-sm">${getStatusBadge(p.status, 'project')}</td>
-        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">${formatCurrency(p.contract_value)}</td>
+        <td class="contract-value-column px-6 py-4 whitespace-nowrap text-sm text-gray-700">${formatCurrency(p.contract_value)}</td>
         <td class="px-6 py-4 whitespace-nowrap text-sm">
           <button onclick="showProjectDetail(${p.id})" class="text-primary hover:text-secondary" title="Xem chi tiết">
             <i class="fas fa-eye"></i>
@@ -487,112 +487,8 @@ async function handleExpenseTypeSubmit(event) {
   }
 }
 
-async function handleProjectSubmit(event) {
-  event.preventDefault();
-  const form = event.target;
-  const formData = new FormData(form);
-  const data = Object.fromEntries(formData);
-  
-  data.contract_value = parseFloat(data.contract_value) || 0;
-  data.estimated_cost = parseFloat(data.estimated_cost) || 0;
-  data.project_manager_id = data.project_manager_id ? parseInt(data.project_manager_id) : null;
-  
-  try {
-    await axios.post('/api/projects', data);
-    alert('✅ Thêm dự án thành công!');
-    form.reset();
-    closeModal('projectModal');
-    loadProjects();
-  } catch (error) {
-    alert('❌ Lỗi: ' + (error.response?.data?.error || 'Không thể thêm dự án'));
-  }
-}
-
-async function handleStaffSubmit(event) {
-  event.preventDefault();
-  const form = event.target;
-  const formData = new FormData(form);
-  const data = Object.fromEntries(formData);
-  
-  data.hourly_rate = parseFloat(data.hourly_rate) || 0;
-  
-  try {
-    await axios.post('/api/staff', data);
-    alert('✅ Thêm nhân sự thành công!');
-    form.reset();
-    closeModal('staffModal');
-    loadStaff();
-  } catch (error) {
-    alert('❌ Lỗi: ' + (error.response?.data?.error || 'Không thể thêm nhân sự'));
-  }
-}
-
-async function handleTaskSubmit(event) {
-  event.preventDefault();
-  const form = event.target;
-  const formData = new FormData(form);
-  const data = Object.fromEntries(formData);
-  
-  data.project_id = parseInt(data.project_id);
-  data.category_id = data.category_id ? parseInt(data.category_id) : null;
-  data.discipline_id = data.discipline_id ? parseInt(data.discipline_id) : null;
-  data.assigned_to = data.assigned_to ? parseInt(data.assigned_to) : null;
-  data.estimated_hours = parseFloat(data.estimated_hours) || 0;
-  
-  try {
-    await axios.post('/api/tasks', data);
-    alert('✅ Thêm nhiệm vụ thành công!');
-    form.reset();
-    closeModal('taskModal');
-    loadTasks();
-  } catch (error) {
-    alert('❌ Lỗi: ' + (error.response?.data?.error || 'Không thể thêm nhiệm vụ'));
-  }
-}
-
-async function handleTimesheetSubmit(event) {
-  event.preventDefault();
-  const form = event.target;
-  const formData = new FormData(form);
-  const data = Object.fromEntries(formData);
-  
-  data.staff_id = parseInt(data.staff_id);
-  data.project_id = parseInt(data.project_id);
-  data.task_id = parseInt(data.task_id);
-  data.hours = parseFloat(data.hours);
-  
-  try {
-    await axios.post('/api/timesheets', data);
-    alert('✅ Thêm timesheet thành công!');
-    form.reset();
-    closeModal('timesheetModal');
-    loadTimesheets();
-  } catch (error) {
-    alert('❌ Lỗi: ' + (error.response?.data?.error || 'Không thể thêm timesheet'));
-  }
-}
-
-async function handleFinanceSubmit(event) {
-  event.preventDefault();
-  const form = event.target;
-  const formData = new FormData(form);
-  const data = Object.fromEntries(formData);
-  
-  data.project_id = parseInt(data.project_id);
-  data.expense_type_id = parseInt(data.expense_type_id);
-  data.amount = parseFloat(data.amount);
-  
-  try {
-    await axios.post('/api/finances', data);
-    alert('✅ Thêm giao dịch thu chi thành công!');
-    form.reset();
-    closeModal('financeModal');
-    loadFinances();
-    loadDashboard(); // Refresh dashboard
-  } catch (error) {
-    alert('❌ Lỗi: ' + (error.response?.data?.error || 'Không thể thêm giao dịch'));
-  }
-}
+// Form handlers are now defined in modals.js
+// Removed duplicate handlers: handleProjectSubmit, handleStaffSubmit, handleTaskSubmit, handleTimesheetSubmit, handleFinanceSubmit
 
 // ==================== DETAIL VIEW FUNCTIONS ====================
 function viewProjectDetail(id) {
@@ -656,8 +552,14 @@ function applyRolePermissions() {
   
   // Hide salary columns for Coordinator and Modeler
   if (role === 'BIM Coordinator' || role === 'BIM Modeler') {
-    const salaryColumns = document.querySelectorAll('.salary-column');
+    const salaryColumns = document.querySelectorAll('.salary-column, .salary-header');
     salaryColumns.forEach(el => el.style.display = 'none');
+  }
+  
+  // Hide contract value columns for Manager, Coordinator and Modeler
+  if (role === 'BIM Manager' || role === 'BIM Coordinator' || role === 'BIM Modeler') {
+    const contractColumns = document.querySelectorAll('.contract-value-column, .contract-value-header');
+    contractColumns.forEach(el => el.style.display = 'none');
   }
   
   // Hide add buttons based on permissions

@@ -312,7 +312,7 @@ app.get('/api/staff/:id', async (c) => {
   
   // Get timesheets
   const timesheets = await db.prepare(`
-    SELECT t.*, ts.work_date, ts.hours, ts.description as work_description,
+    SELECT t.*, t.work_date, t.hours, t.description as work_description,
            p.name as project_name, tsk.title as task_title
     FROM timesheets t
     JOIN tasks tsk ON t.task_id = tsk.id
@@ -998,7 +998,7 @@ app.get('/', (c) => {
                                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Tên dự án</th>
                                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Chủ đầu tư</th>
                                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Trạng thái</th>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Giá trị HĐ</th>
+                                        <th class="contract-value-header px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Giá trị HĐ</th>
                                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Thao tác</th>
                                     </tr>
                                 </thead>
