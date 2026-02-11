@@ -741,22 +741,27 @@ app.get('/', (c) => {
         </style>
     </head>
     <body class="bg-gray-50">
-        <!-- Navigation Bar -->
-        <nav class="bg-primary text-white shadow-lg">
-            <div class="container mx-auto px-4">
-                <div class="flex items-center justify-between py-3">
-                    <div class="flex items-center space-x-4">
-                        <img src="https://onecadvn.com/Upload/images/logo/logo.png" alt="OneCad" class="h-10">
-                        <h1 class="text-xl font-bold">Hệ thống Quản lý Dự án BIM</h1>
-                    </div>
-                    <div class="flex items-center space-x-4">
-                        <span class="text-sm"><i class="fas fa-user-circle mr-2"></i>Admin</span>
+        <!-- Login Screen -->
+        <div id="loginScreen" class="hidden"></div>
+
+        <!-- Main Application -->
+        <div id="mainApp">
+            <!-- Navigation Bar -->
+            <nav class="bg-primary text-white shadow-lg">
+                <div class="container mx-auto px-4">
+                    <div class="flex items-center justify-between py-3">
+                        <div class="flex items-center space-x-4">
+                            <img src="https://onecadvn.com/Upload/images/logo/logo.png" alt="OneCad" class="h-10">
+                            <h1 class="text-xl font-bold">Hệ thống Quản lý Dự án BIM</h1>
+                        </div>
+                        <div id="userInfo" class="flex items-center space-x-4">
+                            <span class="text-sm"><i class="fas fa-user-circle mr-2"></i>Loading...</span>
+                        </div>
                     </div>
                 </div>
-            </div>
-        </nav>
+            </nav>
 
-        <div class="flex">
+            <div class="flex">
             <!-- Sidebar -->
             <aside class="sidebar bg-white w-64 min-h-screen shadow-lg">
                 <div class="p-4">
@@ -1026,12 +1031,13 @@ app.get('/', (c) => {
                     </div>
                 </div>
             </main>
-        </div>
+        </div> <!-- End mainApp -->
 
         <!-- Modals will be dynamically inserted here -->
         <div id="modals-container"></div>
 
         <script src="https://cdn.jsdelivr.net/npm/axios@1.6.0/dist/axios.min.js"></script>
+        <script src="/static/auth.js"></script>
         <script src="/static/modals.js"></script>
         <script src="/static/app.js"></script>
     </body>

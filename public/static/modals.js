@@ -644,4 +644,6 @@ async function handleFinanceSubmit(event) {
 }
 `;
 
-export { modalTemplates, formHandlers };
+// Make available globally for browser
+window.modalTemplates = modalTemplates;
+window.formHandlers = formHandlers;
