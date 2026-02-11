@@ -22,7 +22,9 @@ function getCurrentUser() {
 
 // Login function
 function login(username, password) {
-  const user = TEST_ACCOUNTS.find(u => u.username === username && u.password === password);
+  // Get accounts from localStorage (which may have updated passwords)
+  const accounts = JSON.parse(localStorage.getItem('bim_accounts') || JSON.stringify(TEST_ACCOUNTS));
+  const user = accounts.find(u => u.username === username && u.password === password);
   
   if (user) {
     // Store user info (without password)
